@@ -1,0 +1,188 @@
+Triplie is an AI bot based on a Nth order Markov model  
+The command line version can be compiled on both linux
+and Windows
+
+
+Triplie creates a directed graph which is made of
+- nodes, which represent the words read from the user
+- links which represent the relations between words.
+  Could also be called language relations
+- links that represent the associations between 
+  words in a conversation.
+  Could also be called context relations.
+
+
+All relations between words have an integer weight.
+They count the number of times the words appeared
+close next to eachother. Separate relation graphs
+are used for predecessors and successors
+
+Here is an example:
+
+
+hello triplie, how are you
+
+Triplie will do this:
+remember word hello
+remember word triplie
+increase hello X-> triplie by 1
+increase triplie <-X hello by 1
+remember word how
+remember word are
+remember word you
+increase how X-> are by 1
+increase are <-X how by 1
+increase are X-> you by 1
+increase you <-X are by 1
+
+to get the final graph as shown in the picture:
+
+   ___1->_______            _____1->____  ___1->__
+  /             \          /            \/        \
+hello         triplie    how           are        you
+  \_____<-1_____/          \____<-1____/\___<-1___/
+
+
+Here, 1-> is a successor link with a weight 1, and
+      <-1 a predecessor link with a weight 1.
+
+
+The same happens with 2nd order successors and
+predecessors. From the sentence
+
+today is a beautifull day.
+
+two or ordered graphs will be affected, each with
+two types of links
+
+  
+ascii drawing (1)
+
+   _1->___   ___1->__   ___1->___   ___1->__
+  /       \ /        \ /         \ /        \
+today     is          a      beautifull     day
+  \__<-1__/ \__<-1___/ \__<-1___/  \__<-1___/
+
+
+
+ascii drawing (2)
+              _______1->_______
+   _1->______/________   _______\____1->_____
+  /         /         \ /        \           \
+today      is          a      beautifull    day
+  \__<-1____\_________/ \___<-1__/__________/
+             \____<-1___________/
+
+
+and so on, for each successor/predecessor order 
+until (a configurable) N is reached.
+
+The final graph is pretty complex and can't be
+represented with ascii drawings.
+
+Obviously, the bot learns language better if the user 
+input has 4 or more words
+
+The associations (context relations) are formed
+when the bot talks to the user. Lets say we have
+the following example:
+
+triplie: hello user, are you there right now?
+user   : yes I am here, what do you want?
+
+What happens is, keywords are extracted from
+both of the lines. The keyword extraction mechanism
+is explained below. Lets say these are the keywords
+
+triplie: hello there right now
+user   : here what want
+
+Next, all these keywords are connected as associations,
+like this:
+
+increment: hello X-> here 
+increment: hello X-> what 
+increment: hello X-> want 
+increment: there X-> here, what, want
+increment: right X-> here, what, want
+increment: now   X-> here, what, want 
+
+At this point, the learning engine is finished. 
+
+When building the answer, Triplie does the following
+steps:
+
+1) extract keywords from user's line
+   - the words that hold the most information are
+     keywords. According to information theory, the
+	 rarest symbols bring the highest amount of
+	 information, so the rarest words are considered
+	 keywords.
+
+2) find associations that are higly connected with
+   the extracted keywords. In the previous example,
+   saying "hello are you there right now" would
+   result with the associations to the words
+   here, what, want (called associated words)
+
+3) try to connect the words from the associations
+   to form the reply. 
+   - It uses a modified breadth
+     first search that begins with any of the 
+     associated words and tries to find a path to 
+     any of the remaining words untill path is found
+     that goes trough all (or most) of them.
+   - While searching it only explores nodes that
+     are Nth order connected in the markov language 
+	 model, for example it will explore the word
+	 Z from the word Y only if there is a 2nd order
+	 link between predecessor_of(Y) and Z, etc to
+	 the Nth order configurable by the user.
+   - It may generate as many candidate replies
+     as there are associated words, because it must
+	 consider each associated word as a beginning
+	 word.
+   - Then it proceeds to pick the reply that
+     a) has the most information (most rarely used)
+	    words, and
+	 b) is best connected in the language model
+     
+
+Planned improvements / TODO:
+
+- Grammar parser - using he  "boost spirit" library to
+  build a semantic parser that detects which words in
+  the line are nouns and which are verbs. These words 
+  can be used as "thought atoms"
+
+- Alternatively, connection to the WordNet database to
+  extract nouns, verbs and additional context (better)
+
+- Grammar checks and replacements layer that would 
+  replace words like "you" with "I" and vice-versa
+  before giving the answer. This might be needed when
+  training the bot at first, as not enough associations
+  are present at the current keywords could be used.
+
+- Thought atoms brain-tree model - 
+  This will be used to find out how keywords close to
+  each other are related. Lets say we have the line:
+  triplie, a white ball jumps around.
+  This should create a tree node excited by the words
+  "ball" and "jump".
+  Goal: extend the basic keywords to gain aditional
+  knowledge about them (a ball can jump, and jump
+  brings in more associations)
+
+- Sandpiles model for feeling atoms - a far-fetched
+  possible experiment in the future
+  More info at:
+  http://en.wikipedia.org/wiki/Bak-Tang-Wiesenfeld_sandpile
+  The basic idea is that enough influence (repeating)
+  of the thought atoms might trigger their attached
+  feeling athoms which are connected to other feeling atoms
+  causing an avalanche which "flow" in the conversation
+  (by exciting various kinds of words) after the next user
+  actions, and influence the way the bot explores his
+  keywords and associations.
+

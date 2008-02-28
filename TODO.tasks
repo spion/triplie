@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<gtodo>
+  <category title="Personal" place="0">
+    <item>
+      <attribute id="1204064469" priority="0" done="0" start_date="733098" enddate="99999999" notify="0" endtime="-60" last_edited="1204064469"/>
+      <summary>A string processing class, CAITextParser.</summary>
+      <comment>A string processing class, CAITextParser. It will be used to modify
+and parse the input and output strings of the
+AI class. It will handle the punctiation characters
+and allow them to be properly outputed by getdatastring.
+
+Possible implementation: textparser &lt;&lt; somestring &gt;&gt; outstring;
+Other uses, textparser &lt;&lt; instring; textparser &gt;&gt; outstring;
+
+Other features: textparser.unspaced("-_");
+                textparser.rtspaced(".,!?)]");
+                textparser.ltspaced(":;[(");
+                textparser.exceptwords(":) :( :D :P");
+                textparser.s() - provides the inner string
+                               - of the parser (split to "words")</comment>
+    </item>
+    <item>
+      <attribute id="1203465130" priority="1" done="1" start_date="733092" completed_date="733098" enddate="733152" notify="1" endtime="-60" last_edited="1204064474"/>
+      <summary>Refactor the huge AI class</summary>
+      <comment>It should be split to at least 2 classes one being a dictionary class, the other a graph class. both should then become objects in the AI class.</comment>
+    </item>
+  </category>
+  <category title="Business" place="1"/>
+  <category title="Unfiled" place="2"/>
+</gtodo>

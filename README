@@ -1,0 +1,146 @@
+Triplie v0.7 alpha
+
+------------
+INTRODUCTION
+------------
+
+Thanks for downloading Triplie, an Nth order Markov model based chatter
+bot. It is probably not as good as MegaHAL, but I believe you will find
+it funny to use. It's interface is directly on IRC, so no need to load
+TCL scripts or wrappers to megahal - you just configure it and run it.
+
+------------
+COMPILE
+------------
+
+To compile, unpack and type
+
+make
+
+The generated binaries will be called "triplie" and "cmdtriplie"
+triplie is the IRC version and cmdtriplie is the command line version.
+
+Configure the bot as explained below before running!
+
+-------------
+CONFIGURATION
+-------------
+
+(A) triplie.conf
+----------------
+First thing to edit is triplie.conf. Lets look at it a bit better:
+
+server london.uk.eu.undernet.org 6666
+nick triplie
+ident triplie
+name Triplie Diplie
+chan #triplie -
+
+1) The first line specifies the server here. This line MUST contain 3 words:
+server hostname portnumber
+They must all be correct. Otherwise the bot will not connect to the
+server.
+
+2) The second line is in the format "nick yourbotsnick" If the nickname is in
+use, this simple version will not try another nick.
+
+3) The third line is what will appear as the username of the bot if no identd
+is installed on the machine.
+
+4) The fourth line specifies the real name of the bot.
+
+5) The fifth line specifies the default channel. When run, triplie will ALWAYS
+try to join this channel first. The "-" in that line is a key, but
+its usage is not implemented in this version, yet.
+
+Note that these lines can be handled in any order, but it is important that
+there are no missing parameters in any of them. Also, all the starting words
+of those lines MUST be lowercase!
+
+(B) admins.dat / ignores.dat
+---------------
+admins.dat is a simple file which lists all nick!user@hosts with admin access.
+Admins can join or part the bot, save the word database, use op/deop/voice and
+devoice commands, change a channel topic using the bot, etc. The important
+part is saving the bot database. Choose your admin hosts carefully. On
+Undernet I recommend using *!*@youruser.users.undernet.org for better
+security. At the end it should look something like this:
+
+mynick*!*myident@myvhost.myisp.com
+*!*@myxuser.users.undernet.org
+
+You can have as many lines as you want in this file, and every line should
+be a hostmask like the 2 above. You can also have only 1 line.
+
+Obviously, ignores.dat lists ignore hosts 
+
+(C) words.dat and rels.dat
+--------------------------
+These files should NOT BE TOUCHED. This is where the bot remembers words
+and their relations If you delete one single line in words.dat AFTER
+running triplie and rels.dat appearing, the whole AI engine will mess up
+and start talking pure garbage, or even spit out a segmentation fault.
+If you delete a line in rels.dat, triplie will forget how some words
+connect to eachother.
+
+Before running the bot for the first time, you can edit words.dat to include
+some common words of your language. In general this is not needed, after
+joining a channel the engine will start learning at once.
+
+-------------
+COMMANDS
+-------------
+
+List of triplie's commands:
+
+1) !join #channel
+- makes the bot join the specified channel. At the present moment,
+the bot does not remember the channel after shutdown.
+
+2) !part #channel
+
+3) !quit quitmsg
+- the bot will quit IRC and the process "triplie" will end.
+
+4) !op nick1 nick2 ... nick6
+- ops specified nicknames in the current channel. The other commands
+!deop !vo !devo work similar to !op but are for deop, voice and devoice.
+
+5) !topic some topic
+- changes the topic of the current channel. Note that some characters are
+removed and the topic is converted to lowercase
+
+6.1) !dict words
+- triplie will say how many words it knows at the moment, in the channel.
+6.2) !dict rels
+- triplie will say how many relations between words it knows of.
+6.3) !dict build someword
+- triplie will take someword, build a small tuple using its AI engine
+arround it, and spit out the result in the channel
+6.4) !dict save
+- triple will save its words and relations files. After this command
+is executed for the first time it is strongly recommended that those
+two files are NOT modified. Unless you want to mess it up.
+
+-------------
+NOTES
+-------------
+
+I have not tested if the bot compiles on other systems then mine. Please
+let me know if your *nix system is unable to compile the bot.
+
+This is an alpha release, it could contain bugs and have unoptimised
+memory usage. I'm hoping to improve that in next versions
+
+----------------
+LICENCE & AUTHOR
+----------------
+
+Triple's source files are copyrighted to Spion, except for source files
+from other authors that are used for it. At the moment there is no specific
+copyright licence, but the final licence will most likely be GNU/GPL2 for
+my parts of the code.
+
+Thank you for downloading it! Have fun Smiling
+Spion,
+spion[at]spion<\dot/.>ws on Undernet@#mirc,#gentoo,#makxak
