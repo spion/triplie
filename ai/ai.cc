@@ -77,8 +77,9 @@ void AI::context_push(const string& bywho)
 	element.nick = bywho;
 	element.keywords = keywords;
 	element.addtime = time(0);
-	context.push_front(element);
+	context.push_back(element);
 	conNicks[bywho] = true;
+	
 	if (conNicks.size() > 1) { 
 		conCount++;
 		conNicks.clear();
@@ -86,7 +87,7 @@ void AI::context_push(const string& bywho)
 	}
 	if (conCount >= conLearn)
 	{
-		conCount=0;
+		conCount=1;
 		learncontext();
 	}
 	if (my_dellayed_context.size())
@@ -108,7 +109,7 @@ void AI::learncontext()
 	vector<string> fullcontextnicks;
 	vector<unsigned> nickcontext;
 	vector< vector<unsigned> >::iterator itx, ity;
-
+	time_t lasttime;
 	string lastnick = "";
 	for (qit = context.begin(); qit != context.end(); ++qit)
 	{
@@ -117,8 +118,8 @@ void AI::learncontext()
 			if (lastnick != "")
 			{
 				fullcontext.push_back(nickcontext);
-				fullcontexttimes.push_back(qit->addtime);
-				fullcontextnicks.push_back(qit->nick);
+				fullcontexttimes.push_back(lasttime);
+				fullcontextnicks.push_back(lastnick);
 			}
 			lastnick = qit->nick;
 			nickcontext.clear();
@@ -129,6 +130,7 @@ void AI::learncontext()
 		{
 			nickcontext.push_back(*it);
 		}
+		lasttime = qit->addtime;
 	} // for qit
 	// now we must connect all words from fullcontext[0]
 	// with all words from fullcontext[1]
@@ -136,14 +138,15 @@ void AI::learncontext()
 	if ( //don't learn context that has more then TIMEOUT seconds distance
 		(abs(fullcontexttimes[1] - fullcontexttimes[0]) < TRIP_CONTEXT_TIMEOUT)
 		&& //don't learn context TO words you have generated. [1]->[0]
-		(fullcontextnicks[0] != (string)("(me)"))
+		(fullcontextnicks[1] != (string)("(me)"))
+		//itx fullcontext[0], ity fullcontext[1] connect itx to ity
 	   )
 	{
 		for (it = itx->begin(); it != itx->end(); ++it)
 		{
 			for (jt = ity->begin(); jt != ity->end(); ++jt)
 			{
-				vertical.IncLink(*jt,*it);
+				vertical.IncLink(*it,*jt);
 			}
 		}
 	}
@@ -151,9 +154,7 @@ void AI::learncontext()
 	qit = context.begin();
 	lastnick = qit->nick;
 	while (qit->nick == lastnick) ++qit;
-	lastnick = qit->nick;
-	while (qit->nick == lastnick) ++qit;
-	context.erase(qit,context.end());
+	context.erase(context.begin(), qit);
 }
 
 class CMContext
