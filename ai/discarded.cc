@@ -1,3 +1,23 @@
+//DISCARDED#3
+		float tmpscore = 0;
+		/*if (it>0) {
+			
+			tmpscore += markov.CountLinks(keywords[it-1],1) * 
+						markov.CheckLink(keywords[it-1],keywords[it],1)
+					   / (1.0
+						  + markov.CountLinksStrength(keywords[it-1],1)
+						 );
+		}*/
+		/*if (it>1) {
+			tmpscore += markov.CountLinks(keywords[it-1],2) * 
+						markov.CheckLink(keywords[it-1],keywords[it],2)
+					   / (1.0
+						  + markov.CountLinksStrength(keywords[it-1],2)
+						 );
+		}*/
+
+/*--------------------------------------*/
+
 void AI::prune_vertical_nonkeywords()
 {
 	symbolmap::iterator it;
@@ -24,6 +44,8 @@ void AI::prune_vertical_nonkeywords()
 	}
 	cout << "Pruned " << cnt << " words from vertical relations" << endl;
 }
+
+
 
 
 //REFACTOR: Move to CMarkovLang. Will work with indexes and markov level.

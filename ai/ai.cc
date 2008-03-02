@@ -62,6 +62,9 @@ void AI::learndatastring(const string& bywho) {
 	context_push(bywho);
 }
 
+
+/* --- CONTEXT --- */
+
 void AI::context_push(const string& bywho)
 {
 	deque<CContext>::iterator qit;
@@ -147,6 +150,8 @@ void AI::learncontext()
 			for (jt = ity->begin(); jt != ity->end(); ++jt)
 			{
 				vertical.IncLink(*it,*jt);
+				//cout << "Link: " << dictionary.GetWord(*it)
+				//	 << "->" << dictionary.GetWord(*jt) << endl;
 			}
 		}
 	}
@@ -164,11 +169,11 @@ class CMContext
 		double   cnt;
 		bool operator > (const CMContext& x1) const
 		{
-			return (bool)(this->cnt < x1.cnt);
+			return (bool)(this->cnt > x1.cnt);
 		}
 		bool operator < (const CMContext& x1) const
 		{
-			return (bool)(this->cnt > x1.cnt);
+			return (bool)(this->cnt < x1.cnt);
 		}
 };
 
@@ -190,6 +195,7 @@ void AI::expandkeywords()
 				 ++reply_keywrd)
 			{
 				kcontext[reply_keywrd->first]+= 
+				  (scorekeyword(reply_keywrd->first)>0 ? 1.0 :0.0-1.0) *
 				  1.0 * reply_keywrd->second / vertical.count
 				  * 
 				  logf(
@@ -213,6 +219,7 @@ void AI::expandkeywords()
 	}
 	sort(results.begin(), results.end());
 	reverse(results.begin(), results.end());
+	
 	unsigned keycnt = 1;
 	keywords.clear();
 	for (rit = results.begin(); rit != results.end(); ++rit)
@@ -322,29 +329,18 @@ void AI::generateshuffles()
 //REFACTOR: Move to CAIStatistics
 const float AI::scorekeywords() {
 	float curscore = 0.01;
+	
 	unsigned int it; unsigned twrd;
 	for (it=0;it<keywords.size();it++)
 	{
-		if (it>0) {
-			curscore+= markov.CountLinks(keywords[it-1],1) * 
-						markov.CheckLink(keywords[it-1],keywords[it],1)
-					   / (1.0
-						  + markov.CountLinksStrength(keywords[it-1],1)
-						 );
-		}
-		if (it>1) {
-			curscore+= markov.CountLinks(keywords[it-1],2) * 
-						markov.CheckLink(keywords[it-1],keywords[it],2)
-					   / (1.0
-						  + markov.CountLinksStrength(keywords[it-1],2)
-						 );
-		}
+		//DISCARDED#3
 		twrd = keywords[it];
 		if (keywords[it])
 			curscore+= scorekeyword(twrd);
 	}
-	//cout << "## score calculated" << endl;
-	return (2.0 * curscore) / (keywords.size() + 1.0);
+	//cout << "## score calculated: " << (2.0 * curscore) / 
+	//					(keywords.size() + 0.001) << endl;
+	return (2.0 * curscore) / (keywords.size()+0.001);
 }
 
 void AI::expandshuffles(int method)

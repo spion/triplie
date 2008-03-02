@@ -27,7 +27,7 @@
 #include <deque>
 
 #define TRIP_MAXKEY 6
-#define TRIP_CONTEXT_TIMEOUT 60
+#define TRIP_CONTEXT_TIMEOUT 120
 
 using namespace std;
 
@@ -83,7 +83,6 @@ class AI {
 		void expandshuffles(int method);
 		void keywordsbestshuffle();
 		int aipermute;
-
 	public:
 		AI();
 
