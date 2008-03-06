@@ -20,13 +20,14 @@
  */
 
 #include "dictionary.h"
-#include <iostream>
+#include <fstream>
+
 using std::ifstream;
 using std::ofstream;
 
 unsigned CDictionary::GetKey(const string& word) {
-	unsigned *x = dict.GetMember(word);
-	if (x) return *x;
+	map<string, unsigned>::iterator x = dict.find(word);
+	if (x != dict.end()) return x->second;
 	else { return 0; }
 }
 
@@ -34,11 +35,9 @@ void CDictionary::AddWord(const string& word, const unsigned& howmany) {
 	string cleanword = word;
 	if (!GetKey(cleanword)) {
 		if (counter < TRIP_MAXSIZE) {
-			hashindeces[counter] = counter;
-			dict.AddKey(cleanword, &hashindeces[counter]);
+			dict[cleanword] = counter;
 			counters[counter] = howmany;
 			backdict[counter++] = cleanword;
-			
 		}
 	}
 	else

@@ -21,18 +21,19 @@
 #ifndef _DICTIONARY_H
 #define _DICTIONARY_H
 
-#include "hash_table.h"
 #include <string>
+#include <map>
 #define TRIP_MAXSIZE 65500
 
 using std::string;
+using std::map;
 
 class CDictionary
 {
 	private:
-		CHashTable<unsigned> dict;
+		map<string, unsigned> dict;
+		//CHashTable<unsigned> dict;
 		string backdict[TRIP_MAXSIZE];
-		unsigned hashindeces[TRIP_MAXSIZE];
 		unsigned counter;
 		unsigned counters[TRIP_MAXSIZE];
 		unsigned long totaloccurances;
@@ -43,7 +44,6 @@ class CDictionary
 		}
 		void clear() {
 			backdict[0] = "";
-			hashindeces[0] = 0;
 			counter = 1; 
 			dict.clear();
 		}

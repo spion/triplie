@@ -31,9 +31,6 @@
 
 using namespace std;
 
-typedef map<unsigned int, map<unsigned int, unsigned int> > symbolmap;
-typedef map<unsigned, unsigned> symbolnode;
-
 class AI {
 	private:
 	

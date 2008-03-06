@@ -19,9 +19,6 @@
 #include <fstream>
 #include <algorithm>
 #include "tokens.h"
-#include "hash_table.h"
-
-
 #include "ai.hpp"
 
 
@@ -31,7 +28,7 @@ AI::AI() {
 	keywords.clear();
 	//}
 	relcount=0;
-	conMax=9;
+	conMax=10;
 	conLearn=2;
 	conCount=0;
 	markov.setOrder(6);
@@ -71,7 +68,7 @@ void AI::context_push(const string& bywho)
 	extractkeywords();
 	
 	if (context.size() >= conMax) {
-		context.pop_back();
+		context.pop_front();
 		conNicks.clear();
 		for (qit = context.begin(); qit != context.end(); ++qit)
 			conNicks[qit->nick] = true;
@@ -135,6 +132,7 @@ void AI::learncontext()
 		}
 		lasttime = qit->addtime;
 	} // for qit
+	if (fullcontext.size() <= 1) return;
 	// now we must connect all words from fullcontext[0]
 	// with all words from fullcontext[1]
 	ity = fullcontext.begin(); itx = ity++;
@@ -230,6 +228,8 @@ void AI::expandkeywords()
 	}
 }
 
+/* public */
+
 const long int AI::countrels() {
 	return markov.count();
 }
@@ -265,7 +265,10 @@ void AI::setdatastring(const string& datastring) {
 	for (i=0; i<strkeywords.size(); i++) 
 	{
 		keywords.push_back(dictionary.GetKey(strkeywords[i]));
+	//	cout << strkeywords[i] << "(" 
+	//		 << dictionary.GetKey(strkeywords[i]) << ") ";
 	}
+	//cout << endl;
 }
 
 const string AI::getdatastring() {
