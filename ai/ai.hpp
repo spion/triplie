@@ -71,6 +71,9 @@ class AI {
 		//keyword functions
 		const float scorekeywords();
 		const float scorekeyword(unsigned wrd);
+	
+		//debug functions
+		void outvector(vector<unsigned>& v);
 
 		//connection methods
 		void buildcleanup();

@@ -20,13 +20,11 @@
 #include <algorithm>
 #include "tokens.h"
 #include "ai.hpp"
+//#include <iostream>
 
 
 AI::AI() {
-	//long int di;
-	//for (di=0;di<TRIP_MAXSIZE;di++) {
 	keywords.clear();
-	//}
 	relcount=0;
 	conMax=10;
 	conLearn=2;
@@ -34,6 +32,15 @@ AI::AI() {
 	markov.setOrder(6);
 	setpermute(1);
 	vertCount=0;
+}
+
+//DEBUG purpouses only:
+void AI::outvector(vector<unsigned>& v)
+{
+	vector<unsigned>::iterator word;
+	for (word = v.begin(); word != v.end(); ++word)
+		cout << dictionary.GetWord(*word) << " ";
+	cout << endl;
 }
 
 //REFACTOR: will continue to reside in AI
@@ -77,9 +84,10 @@ void AI::context_push(const string& bywho)
 	element.nick = bywho;
 	element.keywords = keywords;
 	element.addtime = time(0);
+
 	context.push_back(element);
 	conNicks[bywho] = true;
-	
+
 	if (conNicks.size() > 1) { 
 		conCount++;
 		conNicks.clear();
@@ -94,7 +102,7 @@ void AI::context_push(const string& bywho)
 	{
 		keywords = my_dellayed_context;
 		my_dellayed_context.clear();
-		context_push("(me)");
+		context_push("(me)"); 
 	}
 }
 
@@ -451,7 +459,7 @@ void AI::connectkeywords(int method, int nopermute)
 		replace(keywords.begin(),keywords.end(),
 				(unsigned)0,dictionary.GetKey(","));
   	}
-  	else // methods 3+ are extended methods.
+  	else 
   	{
 		generateshuffles();
 		expandshuffles(method);
@@ -473,3 +481,4 @@ const float AI::scorekeyword(unsigned wrd)
 }
 
 unsigned AI::countwords() { return dictionary.count(); }
+
