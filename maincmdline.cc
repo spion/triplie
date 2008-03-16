@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
 						cout << "! " << tai.getdatastring() << "." << endl << endl;
 					}
 					if ((tokens[0] == "!ai") && (llen>2)) {
-						if (tokens[1] == "model") {
+						if (tokens[1] == "order") {
 							defmodel = atol(tokens[2].c_str());
 							cout << "!ai model set to " << defmodel << endl << endl;
 						}

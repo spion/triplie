@@ -52,6 +52,7 @@ vector<string> defchans;
 unsigned int defport;
 bool shouldreconnect;
 
+int sleepmin, sleepmax;
 
 /* ---------------- */
 int  procprivm(char* params, irc_reply_data* hostd, void* conn);
@@ -88,6 +89,7 @@ void signal_handler(int sig)
 
 int main(int argc, char** argv) {
 	defchar="!";
+	sleepmin=0; sleepmax=0;
 	shouldreconnect=true;
 
 	/* Displaying a banner with info... */
@@ -298,10 +300,16 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 					irc_conn->privmsg(msgtarget.c_str(),"AI permute toggled.");
 				}
 			}
+			else if  ((tokens[0] == dc+"sleep") && (x>=3))
+			{
+				sleepmin = atol(tokens[1].c_str());
+				sleepmax = atol(tokens[2].c_str());
+				irc_conn->privmsg(msgtarget.c_str(),"Sleep time changed.");
+			}
 		}
 		else 
 		{
-			if (tokens[0] == mynick)  {
+			if ((tokens[0] == mynick) || (msgtarget[0] != '#'))  {
 				/* We have something to learn from, and to reply to! */
 				/* reply */
 				if (x<2) { return 0; } //nothing more to do here, someone is messing.
@@ -316,12 +324,24 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				tai.setdatastring(rawcmd);
 				tai.extractkeywords();
 				tai.expandkeywords();
-
 				tai.connectkeywords(aimodel);
 				rawcmd = tai.getdatastring();
-				if (rawcmd == "") { rawcmd = " *shrug*"; }
-				rawcmd = rnick+string(":")+rawcmd; //!!!
-				irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
+				if (sleepmax)
+				{
+					sleep(sleepmin + rand()%(sleepmax - sleepmin));
+				}
+				if (rawcmd != "") { 
+					if ((tokens[0] == mynick) && (msgtarget[0] == '#'))
+					{
+						rawcmd = rnick+string(":")+rawcmd; 
+						irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
+					}
+					else
+					{
+						irc_conn->privmsg(rnick.c_str(), 
+										  rawcmd.substr(1).c_str());
+					}
+				}
 				rawcmd = msg.substr(mpos,msg.size());
 			}
 			else {
@@ -429,6 +449,10 @@ int readsettings() {
 		}
 		else if (strsetting == "char") {
 			setts >> defchar;
+		}
+		if (strsetting == "sleep")
+		{
+			setts >> sleepmin >> sleepmax;
 		}
 	}
 	return 1;
