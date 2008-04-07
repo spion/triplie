@@ -22,8 +22,8 @@
 #include "ai.hpp"
 //#include <iostream>
 
-
 AI::AI() {
+	useDijkstra = false;
 	keywords.clear();
 	relcount=0;
 	conMax=10;
@@ -230,7 +230,8 @@ void AI::expandkeywords()
 	keywords.clear();
 	for (rit = results.begin(); rit != results.end(); ++rit)
 	{
-		if (keycnt > TRIP_MAXKEY) break;
+		if ((useDijkstra) && (keycnt > TRIP_MAXKEY/2)) break;
+		else if (keycnt > TRIP_MAXKEY) break;
 		keywords.push_back(rit->wrd);
 		++keycnt;
 	}
@@ -454,7 +455,14 @@ void AI::connectkeywords(int method, int nopermute)
 	if ((!aipermute) || (nopermute)) //basic methods.
 	{
 		vector<unsigned> temp;
-		temp = markov.connect(keywords,method+1);
+		if (useDijkstra)
+		{
+			temp = markov.dconnect(keywords,method+1);
+		}
+		else 
+		{
+			temp = markov.connect(keywords,method+1);
+		}
 		keywords.swap(temp);
 		replace(keywords.begin(),keywords.end(),
 				(unsigned)0,dictionary.GetKey(","));

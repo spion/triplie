@@ -33,7 +33,6 @@ using namespace std;
 
 class AI {
 	private:
-	
 		CDictionary dictionary;
 		CMarkov markov;
 	
@@ -100,7 +99,7 @@ class AI {
 		void expandkeywords();
 		void connectkeywords(int method, int nopermute = 0);
 		void setpermute(int permute) { aipermute = permute; }
-
+		bool useDijkstra;
 };
 
 #endif

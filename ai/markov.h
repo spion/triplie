@@ -28,13 +28,17 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
-
+#include <queue>
 
 using std::vector;
 using std::deque;
 using std::map;
 using std::string;
 using std::stringstream;
+using std::priority_queue;
+using std::pair;
+using std::multimap;
+
 
 class CMarkov
 {
@@ -50,6 +54,7 @@ class CMarkov
 		void setLink (unsigned x, unsigned y, unsigned val, unsigned r);
 	
 		vector<unsigned> connect(vector<unsigned>& keywords, unsigned method=0);
+		vector<unsigned> dconnect(vector<unsigned>& keywords, unsigned method=0);
 	
 		void savedata(const string&);
 		long readdata(const string&);

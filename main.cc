@@ -299,6 +299,23 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 					tai.setpermute(aipermute);
 					irc_conn->privmsg(msgtarget.c_str(),"AI permute toggled.");
 				}
+				if (tokens[1] == "dijkstra")
+				{
+					if ((tokens[2] == "on") || 
+						(tokens[2] == "yes") ||
+						(tokens[2] == "1") ||
+						(tokens[2] == "true"))
+					{
+						tai.useDijkstra = true;
+						irc_conn->privmsg(msgtarget.c_str(),
+										  "Using dijkstra.");
+					}
+					else {
+						tai.useDijkstra = false;
+						irc_conn->privmsg(msgtarget.c_str(),
+										  "Using BFS.");
+					}
+				}
 			}
 			else if  ((tokens[0] == dc+"sleep") && (x>=3))
 			{

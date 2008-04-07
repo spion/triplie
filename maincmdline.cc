@@ -140,6 +140,17 @@ int main(int argc, char** argv) {
 							tai.expandkeywords();
 							cout << "!Response about: " << tai.getdatastring() << endl << endl;
 						}
+						if (tokens[1] == "dijkstra")
+						{
+							if (tokens[2] == "on") {
+								tai.useDijkstra = true;
+								cout << "!Using dijkstra." << endl;
+							}
+							else {
+								tai.useDijkstra = false;
+								cout << "!Using BFS." << endl;
+							}
+						}
 					}
 				}
             } // end of commands

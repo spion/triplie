@@ -1,4 +1,4 @@
-DEBUG=-Os
+CXXFLAGS=-Wall -g -fno-exceptions
 
 IRC.o: IRC.cc
-	g++ -Wall ${DEBUG} -c "IRC.cc" -o "IRC.o" -I.
+	${CXX} ${CXXFLAGS} -c "IRC.cc" -o "IRC.o" -I.
