@@ -23,7 +23,8 @@
 #define _AI_H
 
 #include "dictionary.h"
-#include "markov.h"
+#include "newmarkov.h"
+#include "graph.h"
 #include <deque>
 
 #define TRIP_MAXKEY 6
@@ -90,6 +91,7 @@ class AI {
 	
 		void readalldata(const string& datafolder);
 		void savealldata(const string& datafolder);
+		void prune_vertical_nonkeywords();
 
 		void setdatastring(const string& datastring);
 		void learndatastring(const string& bywho);

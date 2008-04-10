@@ -17,5 +17,8 @@ graph.o: graph.cc
 markov.o: markov.cc
 	${CXX} ${CXXFLAGS} -c "markov.cc" -o "markov.o" -I.
 
+newmarkov.o: newmarkov.cc
+	${CXX} ${CXXFLAGS} -c "newmarkov.cc" -o "newmarkov.o" -I.
+
 clean: 
 	rm *.o

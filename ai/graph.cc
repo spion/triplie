@@ -148,6 +148,7 @@ void CGraph::SaveLinks(const string& sfile)
 		{
 			for(subit=iter->second.begin();subit!=iter->second.end();subit++)
 			{
+				if (subit->second)
 				myfile << iter->first << " "  
 					   << subit->first << " " 
 					   << subit->second << endl;

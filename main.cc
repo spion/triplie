@@ -52,6 +52,8 @@ vector<string> defchans;
 unsigned int defport;
 bool shouldreconnect;
 
+ofstream logfile;
+
 int sleepmin, sleepmax;
 
 /* ---------------- */
@@ -365,6 +367,11 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				string::size_type mpos = msg.find_first_not_of(" :", 0); //finds text.
 				rawcmd = msg.substr(mpos,msg.size());
 			}
+			
+			logfile.open("log.txt",ios::app);
+			logfile << "<" << string(hostd->nick) << "> ";
+			logfile << rawcmd << endl;
+			logfile.close();
 			//learn
 			tai.setdatastring(rawcmd);
 			tai.learndatastring(hostd->nick);

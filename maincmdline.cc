@@ -40,6 +40,7 @@ unsigned long int defmodel=2;
 bool shouldtalk;
 
 
+
 /* ---------------- */
 
 
@@ -162,7 +163,7 @@ int main(int argc, char** argv) {
 				cout << "#Keys  : " << tai.getdatastring() << endl;
 				tai.expandkeywords();
 				cout << "#Expand: " << tai.getdatastring() << endl;
-				tai.connectkeywords(defmodel); //dijkstra method = 1
+				tai.connectkeywords(defmodel); 
 				aireply=tai.getdatastring();
 				if (aireply == "") { aireply = "*shrug*"; }
 				cout << "> "

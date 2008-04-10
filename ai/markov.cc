@@ -21,9 +21,6 @@
 
 #include "markov.h"
 #include <math.h>
-#include <iostream>
-using std::cout;
-using std::endl;
 
 #define TRIP_AI_MAXDEPTH 32000
 
@@ -335,21 +332,24 @@ vector<unsigned> CMarkov::dconnect(vector<unsigned>& keywords,
 								nth_order_connected = false;
 								break;
 							}
-							mutualinformation +=
-							1.0 * node->second / mdata[k].count
-				  			* 
-				  			logf(
-					   		 (1.0 * node->second) * mdata[k].count
-					   		 /
-					   		 (
-					   		 1.0 * mdata[k].CountFwdLinksStrength(previous)
-						    	 * mdata[k].CountBckLinksStrength(node->first)
-					   		 )
-					  		);
+							//mutualinformation +=
+							//1.0 * node->second / mdata[k].count
+				  			//* 
+				  			//logf(
+					   		// (1.0 * node->second) * mdata[k].count
+					   		// /
+					   		// (
+					   		// 1.0 * mdata[k].CountFwdLinksStrength(previous)
+						    //	 * mdata[k].CountBckLinksStrength(node->first)
+					   		// )
+					  		//);
 			
 					  		previous = previousnode[previous];		
 							k++;
 						} //check if its fully n-th order connected.
+						mutualinformation = 1.0 /
+							mdata[1].CountLinksStrength(node->first);
+							
 						double distance = 1.0 / mutualinformation;
 						if (nth_order_connected)
 						{ //add to gray nodes
@@ -382,23 +382,26 @@ vector<unsigned> CMarkov::dconnect(vector<unsigned>& keywords,
 			} //if not nonexistant.
 		} //if currentnode not black
 		//
-		
+		//int numberofgrays = graynodes.size();
+		//int graypopped = 0;
 		if (graynodes.size()) {
 			//prepare next gray node to explore.
 			next = graynodes.top();	
 			//ignore suboptimal lengths.
 			while (myabs(next.pathlength - pathlengths[next.node])
-					> myabs(0.001 * next.pathlength))
+					> myabs(0.0001 * next.pathlength))
 			{
 				if (graynodes.size()>1) {
 					graynodes.pop();
 					next = graynodes.top();
+					//++graypopped;
 				}
 				else { break; }
 			}
 			nodecount++;
 		}
-		
+		//cout << "Exploring " << next.node << " now ("  
+		//	 << graynodes.size() << " remaining)\n";
 		//if there is such a node
 		if ((graynodes.size()) && (nodecount <= TRIP_AI_MAXDEPTH))
 		{

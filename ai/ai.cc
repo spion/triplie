@@ -34,13 +34,29 @@ AI::AI() {
 	vertCount=0;
 }
 
-//DEBUG purpouses only:
-void AI::outvector(vector<unsigned>& v)
+
+void AI::prune_vertical_nonkeywords()
 {
-	vector<unsigned>::iterator word;
-	for (word = v.begin(); word != v.end(); ++word)
-		cout << dictionary.GetWord(*word) << " ";
-	cout << endl;
+	TGraphH::iterator it;
+	TNodeLinks::iterator jt;
+	for (it = vertical.forward.begin(); 
+		it != vertical.forward.end(); ++it)
+	{
+		if (scorekeyword(it->first) < 0)
+		{
+			vertical.forward.erase(it);
+		}
+		else
+		{
+			for (jt = it->second.begin(); jt != it->second.end(); ++jt)
+			{
+				if (scorekeyword(jt->first) < 0)
+				{
+					it->second.erase(jt);
+				}
+			}
+		}
+	}
 }
 
 //REFACTOR: will continue to reside in AI
@@ -50,6 +66,7 @@ void AI::readalldata(const string& datafolder) {
 	relcount+=dictionary.readwords(datafolder + "/words.dat");
 	relcount+=markov.readdata(datafolder + "/rels");
 	vertCount+=vertical.ReadLinks(datafolder + "/relsv.dat");
+	prune_vertical_nonkeywords();
 }
 
 
@@ -230,8 +247,8 @@ void AI::expandkeywords()
 	keywords.clear();
 	for (rit = results.begin(); rit != results.end(); ++rit)
 	{
-		if ((useDijkstra) && (keycnt > TRIP_MAXKEY/2)) break;
-		else if (keycnt > TRIP_MAXKEY) break;
+		//if ((useDijkstra) && (keycnt > TRIP_MAXKEY/2)) break;
+		if (keycnt > TRIP_MAXKEY) break;
 		keywords.push_back(rit->wrd);
 		++keycnt;
 	}
@@ -457,11 +474,11 @@ void AI::connectkeywords(int method, int nopermute)
 		vector<unsigned> temp;
 		if (useDijkstra)
 		{
-			temp = markov.dconnect(keywords,method+1);
+			temp = markov.dconnect(keywords,method);
 		}
 		else 
 		{
-			temp = markov.connect(keywords,method+1);
+			temp = markov.connect(keywords,method);
 		}
 		keywords.swap(temp);
 		replace(keywords.begin(),keywords.end(),
