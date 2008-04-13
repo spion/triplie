@@ -344,7 +344,15 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				tai.extractkeywords();
 				tai.expandkeywords();
 				tai.connectkeywords(aimodel);
-				rawcmd = tai.getdatastring();
+				if (msgtarget[0] == '#')
+				{
+					rawcmd = tai.getdatastring(msgtarget);
+				}
+				else
+				{
+					rawcmd = tai.getdatastring(rnick);
+				}
+				
 				if (sleepmax)
 				{
 					sleep(sleepmin + rand()%(sleepmax - sleepmin));
@@ -374,7 +382,14 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 			logfile.close();
 			//learn
 			tai.setdatastring(rawcmd);
-			tai.learndatastring(hostd->nick);
+			if (msgtarget[0] == '#')
+			{
+				tai.learndatastring(hostd->nick, msgtarget);
+			}
+			else
+			{
+				tai.learndatastring(hostd->nick, rnick);
+			}
 		} // end of normal text
     }
 	return 0;

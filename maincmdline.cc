@@ -87,38 +87,6 @@ int main(int argc, char** argv) {
                     cout << "!saved words and relations" << endl << endl;
                 }
 				else if (llen>1) {
-					if (tokens[0] == "!keys") {
-						tai.setdatastring(subtokstring(tokens,1,100," "));
-						tai.extractkeywords();
-						cout << tai.getdatastring() << endl << endl;
-					}
-					if ((tokens[0] == "!conn") && (llen>2)) {
-						tai.setdatastring(subtokstring(tokens,1,100," "));
-						tai.extractkeywords();
-						cout << "#KEYWORDS: " << tai.getdatastring() << endl;
-						tai.connectkeywords(0);
-						aireply=tai.getdatastring();
-						cout << "!## " << aireply << "." << endl;
-					}
-					if ((tokens[0] == "!dijks") && (llen>2)) {
-						tai.setdatastring(subtokstring(tokens,1,100," "));
-						tai.extractkeywords();
-						cout << "#KEYWORDS: " << tai.getdatastring() << endl;
-						tai.connectkeywords(1);
-						aireply=tai.getdatastring();
-						cout << "!## " << tokens[1] << " "
-						     << aireply << "." << endl;
-					}
-					if ((tokens[0] == "!sconn") && (llen>2)) {
-						tai.setdatastring(subtokstring(tokens,1,100," "));
-						tai.extractkeywords();
-						cout << "#KEYWORDS: " << tai.getdatastring() << endl;
-						tai.connectkeywords(2);
-						aireply=tai.getdatastring();
-						cout << "!## " << aireply << "." << endl;
-						//tai.cleankeywords();
-						cout << "! " << tai.getdatastring() << "." << endl << endl;
-					}
 					if ((tokens[0] == "!ai") && (llen>2)) {
 						if (tokens[1] == "order") {
 							defmodel = atol(tokens[2].c_str());
@@ -129,27 +97,15 @@ int main(int argc, char** argv) {
 							tai.setpermute(defmodel);
 							cout << "!ai model set to " << defmodel << endl << endl;
 						}
-						if (tokens[1] == "follow") {
-							tai.setdatastring(subtokstring(tokens,2,100," "));
-							tai.extractkeywords();
-							cout << "!You talk about: " << tai.getdatastring() << endl << endl;
-						}
-						if (tokens[1] == "expand") {
-							tai.setdatastring(subtokstring(tokens,2,100," "));
-							tai.extractkeywords();
-							cout << "!You talk about: " << tai.getdatastring();					
-							tai.expandkeywords();
-							cout << "!Response about: " << tai.getdatastring() << endl << endl;
-						}
 						if (tokens[1] == "dijkstra")
 						{
 							if (tokens[2] == "on") {
 								tai.useDijkstra = true;
-								cout << "!Using dijkstra." << endl;
+								cout << "!Using dijkstra." << endl << endl;
 							}
 							else {
 								tai.useDijkstra = false;
-								cout << "!Using BFS." << endl;
+								cout << "!Using BFS." << endl << endl;
 							}
 						}
 					}
@@ -160,11 +116,9 @@ int main(int argc, char** argv) {
                 //reply
 				tai.setdatastring(subtokstring(tokens,0,100," "));
 				tai.extractkeywords();
-				cout << "#Keys  : " << tai.getdatastring() << endl;
 				tai.expandkeywords();
-				cout << "#Expand: " << tai.getdatastring() << endl;
 				tai.connectkeywords(defmodel); 
-				aireply=tai.getdatastring();
+				aireply=tai.getdatastring("(console)");
 				if (aireply == "") { aireply = "*shrug*"; }
 				cout << "> "
 				     << aireply << endl;
@@ -172,7 +126,7 @@ int main(int argc, char** argv) {
 
                 //learn
 				tai.setdatastring(theline);
-				tai.learndatastring("(other)");
+				tai.learndatastring("(other)", "(console)");
 				 // end of learn
 
             } // end of chat

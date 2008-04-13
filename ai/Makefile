@@ -20,5 +20,8 @@ markov.o: markov.cc
 newmarkov.o: newmarkov.cc
 	${CXX} ${CXXFLAGS} -c "newmarkov.cc" -o "newmarkov.o" -I.
 
+context.o: context.cc
+	${CXX} ${CXXFLAGS} -c "context.cc" -o "context.o" -I.
+
 clean: 
 	rm *.o

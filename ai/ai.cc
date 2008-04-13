@@ -26,9 +26,6 @@ AI::AI() {
 	useDijkstra = false;
 	keywords.clear();
 	relcount=0;
-	conMax=10;
-	conLearn=2;
-	conCount=0;
 	markov.setOrder(6);
 	setpermute(1);
 	vertCount=0;
@@ -78,127 +75,15 @@ void AI::savealldata(const string& datafolder) {
 }
 
 
-void AI::learndatastring(const string& bywho) {
+void AI::learndatastring(const string& bywho, const string& where) {
 	markov.remember(keywords);
-	context_push(bywho);
+	context[where].setVertical(&vertical);
+	extractkeywords(); // this might cause bugs.
+	context[where].push(bywho, keywords);
 }
 
 
-/* --- CONTEXT --- */
 
-void AI::context_push(const string& bywho)
-{
-	deque<CContext>::iterator qit;
-	extractkeywords();
-	
-	if (context.size() >= conMax) {
-		context.pop_front();
-		conNicks.clear();
-		for (qit = context.begin(); qit != context.end(); ++qit)
-			conNicks[qit->nick] = true;
-	}
-	CContext element;
-	element.nick = bywho;
-	element.keywords = keywords;
-	element.addtime = time(0);
-
-	context.push_back(element);
-	conNicks[bywho] = true;
-
-	if (conNicks.size() > 1) { 
-		conCount++;
-		conNicks.clear();
-		conNicks[bywho] = true;
-	}
-	if (conCount >= conLearn)
-	{
-		conCount=1;
-		learncontext();
-	}
-	if (my_dellayed_context.size())
-	{
-		keywords = my_dellayed_context;
-		my_dellayed_context.clear();
-		context_push("(me)"); 
-	}
-}
-
-
-void AI::learncontext()
-{
-	deque<CContext>::iterator qit;
-	vector<unsigned>::iterator it,jt;
-	vector<unsigned>::iterator i,j;
-	vector< vector<unsigned> > fullcontext;
-	vector<time_t> fullcontexttimes;
-	vector<string> fullcontextnicks;
-	vector<unsigned> nickcontext;
-	vector< vector<unsigned> >::iterator itx, ity;
-	time_t lasttime;
-	string lastnick = "";
-	for (qit = context.begin(); qit != context.end(); ++qit)
-	{
-		if (qit->nick != lastnick)
-		{
-			if (lastnick != "")
-			{
-				fullcontext.push_back(nickcontext);
-				fullcontexttimes.push_back(lasttime);
-				fullcontextnicks.push_back(lastnick);
-			}
-			lastnick = qit->nick;
-			nickcontext.clear();
-			if (fullcontext.size() > 1) // two nicks in list
-				break; //from fullcontext filling loop
-		}
-		for (it = qit->keywords.begin(); it != qit->keywords.end(); ++it)
-		{
-			nickcontext.push_back(*it);
-		}
-		lasttime = qit->addtime;
-	} // for qit
-	if (fullcontext.size() <= 1) return;
-	// now we must connect all words from fullcontext[0]
-	// with all words from fullcontext[1]
-	ity = fullcontext.begin(); itx = ity++;
-	if ( //don't learn context that has more then TIMEOUT seconds distance
-		(abs(fullcontexttimes[1] - fullcontexttimes[0]) < TRIP_CONTEXT_TIMEOUT)
-		&& //don't learn context TO words you have generated. [1]->[0]
-		(fullcontextnicks[1] != (string)("(me)"))
-		//itx fullcontext[0], ity fullcontext[1] connect itx to ity
-	   )
-	{
-		for (it = itx->begin(); it != itx->end(); ++it)
-		{
-			for (jt = ity->begin(); jt != ity->end(); ++jt)
-			{
-				vertical.IncLink(*it,*jt);
-				//cout << "Link: " << dictionary.GetWord(*it)
-				//	 << "->" << dictionary.GetWord(*jt) << endl;
-			}
-		}
-	}
-	// and finally, remove all but the last 2 nicks in list.
-	qit = context.begin();
-	lastnick = qit->nick;
-	while (qit->nick == lastnick) ++qit;
-	context.erase(context.begin(), qit);
-}
-
-class CMContext
-{
-	public:
-		unsigned wrd;
-		double   cnt;
-		bool operator > (const CMContext& x1) const
-		{
-			return (bool)(this->cnt > x1.cnt);
-		}
-		bool operator < (const CMContext& x1) const
-		{
-			return (bool)(this->cnt < x1.cnt);
-		}
-};
 
 void AI::expandkeywords()
 {
@@ -297,7 +182,7 @@ void AI::setdatastring(const string& datastring) {
 	//cout << endl;
 }
 
-const string AI::getdatastring() {
+const string AI::getdatastring(const string& where) {
 	string theline="";
 	unsigned int i;
 	if (keywords.size())
@@ -312,7 +197,8 @@ const string AI::getdatastring() {
 				{ theline=theline+" "+kwrd; }
 		}
 	}
-	my_dellayed_context = keywords;
+	extractkeywords(); //this might cause bugs
+	context[where].my_dellayed_context = keywords;
 	return theline;
 }
 

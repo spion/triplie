@@ -42,15 +42,6 @@ struct CAdminList {
 	vector<string> userhosts;
 };
 
-
-struct CContext
-{
-	vector<unsigned> keywords;
-	string nick;
-	time_t addtime;
-};
-
-
 double uniform_deviate (int seed);
 
 void tokenize(const string& str,

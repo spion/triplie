@@ -25,6 +25,8 @@
 #include "dictionary.h"
 #include "newmarkov.h"
 #include "graph.h"
+#include "context.h"
+
 #include <deque>
 
 #define TRIP_MAXKEY 6
@@ -58,15 +60,9 @@ class AI {
 
 		//Thinking model - Vertical relations (context)
 		CGraph vertical;
-		deque<CContext> context;
+		map<string, CContextQueue> context;
 		map<string, bool> conNicks;
-		unsigned conMax;
-		unsigned conLearn;
-		unsigned conCount;
 		unsigned vertCount;
-		//context functions
-		void context_push(const string& bywho);
-		void learncontext();
 
 		//keyword functions
 		const float scorekeywords();
@@ -94,8 +90,8 @@ class AI {
 		void prune_vertical_nonkeywords();
 
 		void setdatastring(const string& datastring);
-		void learndatastring(const string& bywho);
-		const string getdatastring();
+		void learndatastring(const string& bywho, const string& where);
+		const string getdatastring(const string& where);
 
 		void extractkeywords();
 		void expandkeywords();
