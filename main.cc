@@ -318,6 +318,19 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 										  "Using BFS.");
 					}
 				}
+				if (tokens[1] == "connect")
+				{
+					if (x>3)
+					{
+					tai.setdatastring(tokens[2] + " " + tokens[3]);
+					tai.extractkeywords();
+					tai.connectkeywords(aimodel);
+					string res = string("Result: ") 
+							   + tai.getdatastring("(null)");
+					irc_conn->privmsg(msgtarget.c_str(), 
+							res.c_str());
+					}
+				}
 			}
 			else if  ((tokens[0] == dc+"sleep") && (x>=3))
 			{
