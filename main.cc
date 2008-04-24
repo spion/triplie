@@ -151,8 +151,7 @@ int main(int argc, char** argv) {
 }
 
 void forktobg() {
-	int i,lfp;
-	char fstr[10];
+	int i;
 	i=fork();
 	if (i<0) exit(1); /* fork error */
 	if (i>0) exit(0); /* parent exits */
@@ -161,18 +160,22 @@ void forktobg() {
 	i=open("/dev/null",O_RDWR); /* open stdin */
 	dup(i); /* stdout */
 	dup(i); /* stderr */
+	#ifdef linux
+	int lfp; 
+	char fstr[10];
 	umask(027);
 	lfp=open("triplie.lock",O_RDWR|O_CREAT,0640);
-	if (lfp<0) exit(1); /* can not open */
-	if (lockf(lfp,F_TLOCK,0)<0) exit(0); /* can not lock */
-	/* only first instance continues */
+	if (lfp<0) exit(1);
+	if (lockf(lfp,F_TLOCK,0)<0) exit(0);
 	sprintf(fstr,"%d\n",getpid());
-	write(lfp,fstr,strlen(fstr)); /* record pid to lockfile */
+	write(lfp,fstr,strlen(fstr));
+	#endif
 	signal(SIGCHLD,SIG_IGN); /* ignore child */
 	signal(SIGTSTP,SIG_IGN); /* ignore tty signals */
 	signal(SIGTTOU,SIG_IGN);
 	signal(SIGTTIN,SIG_IGN);
 }
+
 
 
 /* ***************
