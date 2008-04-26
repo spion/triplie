@@ -20,12 +20,10 @@
  */
 
 #include "context.h"
-#include <iostream>
 
 
 void CContextQueue::push(const string& bywho, vector<unsigned>& keywords)
 {
-	std::cout << "Called context push" << std::endl;
 	deque<CContext>::iterator qit;
 	
 	if (context.size() >= conMax) {
@@ -63,7 +61,6 @@ void CContextQueue::push(const string& bywho, vector<unsigned>& keywords)
 
 void CContextQueue::learn()
 {
-	std::cout << "Called learn context" << std::endl;
 	deque<CContext>::iterator qit;
 	vector<unsigned>::iterator it,jt;
 	vector<unsigned>::iterator i,j;
