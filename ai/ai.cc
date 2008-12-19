@@ -18,52 +18,135 @@
 
 #include <fstream>
 #include <algorithm>
-#include "tokens.h"
-#include "ai.hpp"
-//#include <iostream>
 
-AI::AI() {
-	useDijkstra = false;
+#include "ai.hpp"
+
+#include <limits>
+#include <numeric>
+
+#define MINIMUM_INFO_BITS 10.0
+#define TRIP_DISTRUBUTED
+
+using std::numeric_limits;
+
+/* Initializations */
+
+AI::AI(string dbf):dictionary(dbf), markov(dbf), vertical(dbf, "assoc") {
+	useRandom = true;
+	Distributed = false;
 	keywords.clear();
 	relcount=0;
 	markov.setOrder(6);
-	setpermute(1);
+	setpermute(TRIP_MAXKEY_DEFAULT);
 	vertCount=0;
+	maxpermutecount = TRIP_AI_MAXPERMUTATIONS;
 }
 
-
+/* Not implemented */
 void AI::prune_vertical_nonkeywords()
 {
-	TGraphH::iterator it;
-	TNodeLinks::iterator jt;
-	for (it = vertical.forward.begin(); 
-		it != vertical.forward.end(); ++it)
+
+}
+
+
+void AI::learnonlymarkov()
+{
+	
+	for (unsigned k = 0; k < keywords.size(); ++k)
 	{
-		if (scorekeyword(it->first) < 0)
-		{
-			vertical.forward.erase(it);
-		}
-		else
-		{
-			for (jt = it->second.begin(); jt != it->second.end(); ++jt)
-			{
-				if (scorekeyword(jt->first) < 0)
-				{
-					it->second.erase(jt);
-				}
-			}
+		dictionary.AddWord(keywords[k]); //non-text learn
+	}
+	markov.BeginTransaction();
+	markov.remember(keywords);
+	markov.EndTransaction();
+		
+}
+
+void AI::connect_to_workers(string file)
+{
+	Distributed = false;
+	slaves.clear();
+	
+	vector<string> hosts;
+	vector<int> ports;
+	
+	ifstream f(file.c_str());
+	while (f && !f.eof())
+	{
+		string host; int port;
+		f >> host >> port;
+		if (host.size() > 1) {
+			Distributed = true;
+			hosts.push_back(host);
+			ports.push_back(port);
 		}
 	}
+	slaves.resize(hosts.size());
+	for (unsigned k = 0; k < slaves.size(); ++k)
+	{
+		//cout << k << " connect: " << hosts[k] << ":" << ports[k] << endl;
+		while (!(slaves[k].Connect(hosts[k], ports[k]))) { sleep(1); }
+		//cout << "done." << endl;
+	}
 }
+
+vector<vector<unsigned> > AI::GetRepliesFromAll()
+{
+	string request = TripMaster::PrepareReplyRequest(keywords);
+	SendAllSlavesAndWait(request);
+	vector<vector<unsigned> > replies;
+	//cout << "Getting replies" << endl;
+	for (unsigned i = 0; i < slaves.size(); ++i)
+	{
+		//cout << i << endl;
+		string reply = slaves[i].ReplyData();
+		if (TripMaster::VerifyAnswer(reply))
+		{
+			//cout << "RemoteReply: " << reply << endl;
+			replies.push_back(TripMaster::ConvertAnswerToVector(reply));
+		}
+	}
+	return replies;
+}
+
+void AI::SendLearnKeywords()
+{
+	string request = TripMaster::PrepareLearnRequest(keywords);
+	SendAllSlavesAndWait(request);
+}
+
+void AI::SendAllSlavesAndWait(const string& request)
+{
+	for (unsigned i = 0; i < slaves.size(); ++i)
+	{
+		//cout << "Sendto:" << i << " " << request << endl;
+		slaves[i].SendRequest(request);
+	}
+	bool complete = false;
+	unsigned timeoutcounter = 0;
+	while (!complete)
+	{
+		complete = true;
+		for (unsigned i = 0; i < slaves.size(); ++i)
+		{
+			if (!slaves[i].RequestComplete())
+			{
+				complete = false;
+			}
+		}
+		usleep(5000); //5ms
+		if (++timeoutcounter > 5000) { break; } // break after 25 seconds.
+	}
+	//cout << "Complete." << endl;
+}
+
 
 //REFACTOR: will continue to reside in AI
 void AI::readalldata(const string& datafolder) {
 	relcount=0;
 	dictionary.clear();
 	relcount+=dictionary.readwords(datafolder + "/words.dat");
-	relcount+=markov.readdata(datafolder + "/rels");
 	vertCount+=vertical.ReadLinks(datafolder + "/relsv.dat");
-	prune_vertical_nonkeywords();
 }
 
 
@@ -76,14 +159,18 @@ void AI::savealldata(const string& datafolder) {
 
 
 void AI::learndatastring(const string& bywho, const string& where) {
+	markov.BeginTransaction();
 	markov.remember(keywords);
+	markov.EndTransaction();
 	context[where].setVertical(&vertical);
 	extractkeywords(); // this might cause bugs.
 	context[where].push(bywho, keywords);
+	if (Distributed)
+	{
+		SendLearnKeywords();
+	}
+
 }
-
-
-
 
 void AI::expandkeywords()
 {
@@ -93,27 +180,33 @@ void AI::expandkeywords()
 	vector<unsigned>::iterator keywrd;
 	vector<CMContext> results;
 	vector<CMContext>::iterator rit;
+	//cout << "Levenstein expanding..." << endl;
+	map<unsigned, string> expansionmap
+		= dictionary.FindSimilarWords(keywords);
+
+	for (map<unsigned,string>::iterator x = expansionmap.begin();
+		 x != expansionmap.end(); ++x)
+	{
+		keywords.push_back(x->first);
+	}
+	
 	for (keywrd = keywords.begin(); keywrd != keywords.end(); ++keywrd)
 	{
-		TGraphH::iterator req_keywrd;
+		TNodeLinks req_keywrd;
 		req_keywrd = vertical.GetFwdLinks(*keywrd);
-		if (req_keywrd != vertical.NonExistant()) {
-			for (reply_keywrd = req_keywrd->second.begin(); 
-				 reply_keywrd != req_keywrd->second.end(); 
+		unsigned req_keywrd_occurances = dictionary.occurances(*keywrd);
+
+		if (req_keywrd.size() > 0) {
+			for (reply_keywrd = req_keywrd.begin(); 
+				 reply_keywrd != req_keywrd.end(); 
 				 ++reply_keywrd)
 			{
-				kcontext[reply_keywrd->first]+= 
-				  (scorekeyword(reply_keywrd->first)>0 ? 1.0 :0.0-1.0) *
-				  1.0 * reply_keywrd->second / vertical.count
-				  * 
-				  logf(
-					   (1.0 * reply_keywrd->second) * vertical.count
-					   /
-					   (
-					   1.0 * vertical.CountFwdLinksStrength(req_keywrd->first)
-						 * vertical.CountBckLinksStrength(reply_keywrd->first)
-					   )
-					  );
+				if (scorekeyword(reply_keywrd->first) > 0.0)
+				{
+				  kcontext[reply_keywrd->first] += 
+					1.0 * reply_keywrd->second / req_keywrd_occurances
+						/ req_keywrd.size();
+				}
 			}
 		}
 	}
@@ -132,7 +225,6 @@ void AI::expandkeywords()
 	keywords.clear();
 	for (rit = results.begin(); rit != results.end(); ++rit)
 	{
-		//if ((useDijkstra) && (keycnt > TRIP_MAXKEY/2)) break;
 		if (keycnt > TRIP_MAXKEY) break;
 		keywords.push_back(rit->wrd);
 		++keycnt;
@@ -176,10 +268,17 @@ void AI::setdatastring(const string& datastring) {
 	for (i=0; i<strkeywords.size(); i++) 
 	{
 		keywords.push_back(dictionary.GetKey(strkeywords[i]));
-	//	cout << strkeywords[i] << "(" 
-	//		 << dictionary.GetKey(strkeywords[i]) << ") ";
 	}
 	//cout << endl;
+}
+
+void AI::setnumericdatastring(const vector<string>& numeric)
+{
+	keywords.clear();
+	for (unsigned i=0; i < numeric.size(); ++i)
+	{
+		keywords.push_back(convert<unsigned>(numeric[i]));
+	}
 }
 
 const string AI::getdatastring(const string& where) {
@@ -190,7 +289,7 @@ const string AI::getdatastring(const string& where) {
 		for (i=0;i<keywords.size();i++)
 		{
 			string kwrd = dictionary.GetWord(keywords[i]);
-			string::size_type loc = kwrd.find_first_of(".,!?:)-",0);
+			string::size_type loc = kwrd.find_first_of(".,!?)",0); // -:
 			if (loc != string::npos) //interpunction char.
 				{ theline=theline+kwrd; }
 			else  //normal word
@@ -198,7 +297,18 @@ const string AI::getdatastring(const string& where) {
 		}
 	}
 	extractkeywords(); //this might cause bugs
+	//if (where != "")
 	context[where].my_dellayed_context = keywords;
+	return theline;
+}
+
+const string AI::getnumericdatastring()
+{
+	string theline = "";
+	for (unsigned i = 0; i < keywords.size(); ++i)
+	{
+		theline = theline + " " + convert<string>(keywords[i]);
+	}
 	return theline;
 }
 
@@ -221,53 +331,41 @@ void AI::extractkeywords() {
 	keywords.swap(sorted);
 }
 
-//REFACTOR: Move to CAIPermutator class.
-void AI::generateshuffles()
-{
-	vector<unsigned> shuffie;
-	list<vector<unsigned> > results;
-	shuffles.clear();
-	if (keywords.size() >0) { results.push_back(keywords); }
-	int number=keywords.size()-1;
-    for (int k=1; k<=number; k++)
-    {
-        shuffie=keywords;
-        unsigned temp = shuffie[k];
-		shuffie[k] = shuffie[0];
-		shuffie[0] = temp;
-        results.push_back(shuffie);
-    }
-	shuffles.swap(results);
-	//cout << "## shufs generated" << endl;
-}
-
 //REFACTOR: Move to CAIStatistics
 const float AI::scorekeywords() {
 	float curscore = 0.01;
-	
+	map<unsigned,bool> usedword;
 	unsigned int it; unsigned twrd;
 	for (it=0;it<keywords.size();it++)
 	{
-		//DISCARDED#3
 		twrd = keywords[it];
-		if (keywords[it])
-			curscore+= scorekeyword(twrd);
+		if (twrd)
+		{
+			if (usedword.find(twrd) == usedword.end())
+			{
+				curscore+= scorekeyword(twrd);
+				usedword[twrd] = true;
+			}
+			else
+			{
+				curscore -= MINIMUM_INFO_BITS; // repetition penalty
+			}
+		}
+		else { curscore -= 4.0 * MINIMUM_INFO_BITS; } 
+		// disjoint parts penalty.
 	}
-	//cout << "## score calculated: " << (2.0 * curscore) / 
-	//					(keywords.size() + 0.001) << endl;
-	return (2.0 * curscore) / (keywords.size()+0.001);
+	return curscore / (keywords.size()+1.0);
 }
 
-void AI::expandshuffles(int method)
+void AI::scoreshuffles(int method)
 {
-	list<vector<unsigned> >::iterator it;
+	
+	vector<vector<unsigned> >::iterator it;
 	scores.clear();
 	for (it=shuffles.begin();it!=shuffles.end();it++)
 	{
 		keywords.clear();
 		keywords = *it;
-		connectkeywords(method,1);
-		*it = keywords;
 		scores.push_back(scorekeywords());
 	}
 }
@@ -275,8 +373,8 @@ void AI::expandshuffles(int method)
 void AI::keywordsbestshuffle()
 {
 	list<float>::iterator scoreit = scores.begin();
-	list<vector<unsigned> >::iterator it = shuffles.begin();
-	float bestscore = -1000.0; // needs 1000 words in reply to get below.
+	vector<vector<unsigned> >::iterator it = shuffles.begin();
+	float bestscore = -10000.0; // needs 1000 words in reply to get below.
 	while ( (it != shuffles.end()) && (scoreit!=scores.end()) )
 	{
 		if (*scoreit > bestscore)
@@ -355,41 +453,41 @@ void AI::buildcleanup() {
 void AI::connectkeywords(int method, int nopermute)
 {
 	string answerstr = ""; string tmpstr = "";
-	if ((!aipermute) || (nopermute)) //basic methods.
-	{
-		vector<unsigned> temp;
-		if (useDijkstra)
+	if (Distributed) {
+		shuffles = GetRepliesFromAll();
+	}
+	else {
+		if (useRandom)
 		{
-			temp = markov.dconnect(keywords,method);
+			shuffles = markov.dconnect(keywords, method, maxpermutecount);
 		}
 		else 
 		{
-			temp = markov.connect(keywords,method);
-		}
-		keywords.swap(temp);
-		replace(keywords.begin(),keywords.end(),
-				(unsigned)0,dictionary.GetKey(","));
-  	}
-  	else 
-  	{
-		generateshuffles();
-		expandshuffles(method);
-		keywordsbestshuffle();
-  	}
+			shuffles = markov.connect(keywords, method);
+		}	
+	}
+	scoreshuffles(0);
+	keywordsbestshuffle();
+	replace(keywords.begin(),keywords.end(),
+			(unsigned)0,dictionary.GetKey(","));
 	buildcleanup();
 }
 
 //REFACTOR: move to CAIStatistics.
 const float AI::scorekeyword(unsigned wrd)
 {
-	return 0.0 - logf(0.85 +
-						(
-							100.0 *
-							dictionary.occurances(wrd) 
-										/ (2.0 * dictionary.occurances())
-						)
-					 );
+	//cout << "0.0 - log(" << dictionary.occurances(wrd) << "/"
+	//				   << dictionary.occurances() << ") / log(2) - 10.0" << endl; 
+	return 0.0 - log(1.0 * dictionary.occurances(wrd) 
+					  / dictionary.occurances()) / log(2)
+					  - MINIMUM_INFO_BITS; 
+
+	// at least MINIMUM_INFO_BITS bits needed to get positive value
 }
 
 unsigned AI::countwords() { return dictionary.count(); }
+
+const unsigned AI::countvrels() {
+	return vertical.count;
+}
 

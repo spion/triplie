@@ -41,6 +41,7 @@ template<typename T> bool myabs(T a)
 
 CMarkov::CMarkov()
 {
+
 }
 
 CMarkov::~CMarkov()
@@ -536,3 +537,4 @@ long CMarkov::CheckLink(unsigned x, unsigned y, unsigned r)
 {
 	return mdata[r].CheckLink(x,y);
 }
+

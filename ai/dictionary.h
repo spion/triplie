@@ -23,33 +23,36 @@
 
 #include <string>
 #include <map>
+#include "sqlite_class.h"
 #define TRIP_MAXSIZE 65500
+
+#define MAX_WSIZE 20
+
+#define LEVEN_MAGIC_LIMIT 0.167
 
 using std::string;
 using std::map;
 
+
+
 class CDictionary
 {
 	private:
-		map<string, unsigned> dict;
-		//CHashTable<unsigned> dict;
-		string backdict[TRIP_MAXSIZE];
-		unsigned counter;
-		unsigned counters[TRIP_MAXSIZE];
+		SQLite db;
+		//map<string, unsigned> dict;
+		//string backdict[TRIP_MAXSIZE];
+		//unsigned counter;
+		//unsigned counters[TRIP_MAXSIZE];
 		unsigned long totaloccurances;
 	public:
-		CDictionary() {
-			clear();
-			totaloccurances = 0;
-		}
-		void clear() {
-			backdict[0] = "";
-			counter = 1; 
-			dict.clear();
-		}
+		CDictionary(string dbf);
+		void CloseDB() { db.CloseDB(); }
+		void OpenDB() { db.OpenDB(); }
+		void clear() { }
 		const string GetWord(unsigned key); 
 		unsigned GetKey(const string& word);
 		void AddWord(const string& word, const unsigned& howmany = 1);
+		void AddWord(const unsigned& word, const unsigned& howmany = 1, bool noInject = true) ;
 		unsigned count();
 		unsigned int readwords(string wordsfile);
 		void savewords(string wordsfile);
@@ -57,6 +60,17 @@ class CDictionary
 		unsigned occurances(unsigned wrd);
 		unsigned occurances(const string& wrd);
 		unsigned occurances();
+
+		map<unsigned,string> FindSimilarWords(const vector<unsigned>& wordlist);
+
+		void BeginTransaction();
+		void EndTransaction();
+		void ClearAll();
+		
 };
+
+
+
+
 
 #endif

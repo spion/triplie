@@ -1,282 +1,438 @@
 #include "newmarkov.h"
 #include "graph.h"
+#include <iostream>
 #include <deque>
 #include <fstream>
+#include <sstream>
+#include <string>
 
-#define TRIP_AI_MAXDEPTH 32000
+#define TRIP_AI_MAXNODES 128000
+#define PARTIAL_CACHING
 
 using std::deque;
 using std::ifstream;
 using std::ofstream;
+using std::stringstream;
+using std::string;
+
+CMarkov::CMarkov(string dbf):db(dbf) {
+	internalCount = 0; 
+	db.Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
+	db.Query("PRAGMA read_uncommited = True;");
+}
+
+void CMarkov::Reindex(unsigned order)
+{
+	/*
+	for (unsigned i = 1; i < MARKOV_MAXORDER; ++i)
+	{
+		string query = string("DROP INDEX IF EXISTS markov_i_") + convert<string>(i);
+		db.Query(query + ";");
+		query += "_" + convert<string>(i+1);
+		db.Query(query + ";");
+	}
+	for (unsigned i = 1; i < MARKOV_MAXORDER; ++i)
+	{
+		string indname = string("CREATE INDEX markov_i_") + convert<string>(i);
+		string onwhat = string(" ON markov (id") + convert<string>(i);
+		db.Query(indname + onwhat + ");");
+		onwhat += ",id" + convert<string>(i+1);
+		indname += "_" + convert<string>(i+1);
+		db.Query(indname + onwhat + ");");	
+	}*/
+}
 
 void CMarkov::remember(vector<unsigned>& sentence)
 {
 	unsigned i;
 	vector<unsigned> v = sentence;
+	v.insert(v.begin(), 0);
 	if (sentence.size() > 1)
 	{
 		for (i = 0; i <= MARKOV_MAXORDER; ++i)
 			v.push_back(0);
-		for (i = 0; i < sentence.size()-1; ++i)
+		for (i = 0; i <= sentence.size(); ++i)
 		{
-			mdata[v[i]]
-		 	 	[v[i+1]]
-		 	 	[v[i+2]]
-		 	 	[v[i+3]]
-		 	 	[v[i+4]]
-		 	 	[v[i+5]]+=1;
-		 	 	++internalCount;
+			stringstream query;
+			query << " WHERE id1="
+				  << v[i  ] << " AND id2="
+				  << v[i+1] << " AND id3="
+				  << v[i+2] << " AND id4="
+				  << v[i+3] << " AND id5="
+				  << v[i+4] << " AND id6="
+				  << v[i+5] << ";";
+			db.Query(string("UPDATE or IGNORE markov SET val=val+1 ") + query.str());
+			stringstream qvi;
+			qvi << " (" 
+				<< v[i  ] << "," << v[i+1] << ","
+				<< v[i+2] << "," << v[i+3] << ","
+				<< v[i+4] << "," << v[i+5] << ", 1);";
+			db.Query(string("INSERT or IGNORE INTO markov VALUES") + qvi.str());
+			++internalCount;
 		}
 	}
 }
 
-bool CMarkov::CheckIfLinked(vector<unsigned>& words)
+unsigned CMarkov::LinkStrength(unsigned x, unsigned y, unsigned order)
 {
+	stringstream query;
+	if (order >= MARKOV_MAXORDER) { order = MARKOV_MAXORDER-1; } 
+	query << "SELECT sum(val) FROM markov WHERE id1 = " << x
+		  << "AND id" << 1+order << " = " << y;
+	db.Query(query.str());
+	return convert<unsigned>(db.GetLastResult()[0]);
+}
 
-	if (!words.size()) return true;
-	newmarkov<MARKOV_MAXORDER>::model::iterator 
-		it = mdata.find(words[0]);
-	if (it != mdata.end())
+unsigned CMarkov::LinkStrength(unsigned x, bool forward, unsigned order)
+{
+	stringstream query;
+	if (order >= MARKOV_MAXORDER) { order = MARKOV_MAXORDER-1; } 
+	query << "SELECT sum(val) FROM markov WHERE ";
+	if (forward)
 	{
-		if (words.size() < 2) return true;
-		newmarkov<MARKOV_MAXORDER-1>::model::iterator
-			it2 = it->second.find(words[1]);
-		if (it2 != it->second.end())
-		{
-			if (words.size() < 3) return true;
-			newmarkov<MARKOV_MAXORDER-2>::model::iterator
-				it3 = it2->second.find(words[2]);
-			if (it3 != it2->second.end())
-			{		
-				if (words.size() < 4) return true;
-				newmarkov<MARKOV_MAXORDER-3>::model::iterator
-					it4 = it3->second.find(words[3]);
-				if (it4 != it3->second.end())
-				{
-					if (words.size() < 5) return true;	
-					newmarkov<MARKOV_MAXORDER-4>::model::iterator
-						it5 = it4->second.find(words[4]);
-					if (it5 != it4->second.end())
-					{
-						if (words.size() < 6) return true;	
-						newmarkov<MARKOV_MAXORDER-5>::model::iterator
-							it6 = it5->second.find(words[5]);
-						if (it6 != it5->second.end())
-						{
-							return true;
-						}
-					}
-				}
-			}
-		}
+		query << "id1 = " << x;
+		query << " AND id" << 1+order << "<>0";
 	}
-	return false;
-}
-
-
-vector<unsigned> CMarkov::dconnect(vector<unsigned>& keywords, unsigned method)
-{
-	return connect(keywords,method);
-}
-
-vector<unsigned> CMarkov::connect(vector<unsigned>& keywords, unsigned method)
-{
-	vector<unsigned>::iterator it;
-	unsigned markov_order = method + 1;
-	if (markov_order > MARKOV_MAXORDER) markov_order = MARKOV_MAXORDER;
-	
-	map<unsigned, bool> foundnodes; //found nodes
-	map<unsigned, bool> blacknodes; //nodes already explored
-	map<unsigned, bool> deadnodes;  //non-expandable nodes.
-	deque<unsigned>     graynodes;  //nodes to be explored.
-	deque<unsigned>::iterator next; //next gray node in list.
-	
-		unsigned keynode; // current keynode from which exploring began.
-	
-	TNodeLinks previousnode;
-	
-	vector<unsigned> results;
-	
-	unsigned currentnode;
-	if (keywords.size() > 0) {
-		currentnode = keywords[0];
-		foundnodes[currentnode] = true;
+	else
+	{	
+		query << "id" << 1+order << " = " << x;
+		query << " AND id1 <> 0";
 	}
-	else {
-		return results;
-	}
-	bool finished = false;
-	bool nextassigned = true;
-	unsigned nodecount;
-	nodecount = 0;
-	graynodes.push_back(currentnode);
-	previousnode[currentnode] = 0;
-	previousnode[0] = 0;
-	keynode = currentnode;
-	while (!finished)
-	{
-		if (graynodes.size() > 0) 
-			graynodes.pop_front();
-		if (blacknodes.find(currentnode) == blacknodes.end()) 
-		{ //node not black
-			blacknodes[currentnode] = true; // mark as black
-			newmarkov<MARKOV_MAXORDER>::model::iterator 
-				links = mdata.find(currentnode);
-			if (links != mdata.end())
-			{	//if there are links to other nodes from this node
-				newmarkov<MARKOV_MAXORDER-1>::model::iterator node;
-				for (node = links->second.begin(); 
-				 node != links->second.end(); ++node)
-				{ //for each node that is linked
-					if (blacknodes.find(node->first) == blacknodes.end())
-					{	//node not black
-						unsigned k = 2;
-						unsigned previous = previousnode[currentnode];
-						vector<unsigned> linkcheck;
-						linkcheck.push_back(node->first);
-						linkcheck.push_back(currentnode);
-						while (k <= markov_order)
-						{
-							if (!previous) break;
-							linkcheck.push_back(previous);
-							previous = previousnode[previous];
-							++k;
-						}
-						std::reverse(linkcheck.begin(),linkcheck.end());
-						bool nth_order_connected = 
-							CheckIfLinked(linkcheck);
-						if (nth_order_connected)
-						{ //add to gray nodes
-							graynodes.push_back(node->first);
-							previousnode[node->first] = currentnode;
-						}
-					
-					} //if linked node not blacknode 
-				} //for all nodes linked to the current
-			} //if not nonexistant.
-		} //if currentnode not black
-		next = graynodes.begin(); //prepare next gray node to explore.
-		nodecount++;
-		//if there is such a node
-		if ((next != graynodes.end()) && (nodecount <= TRIP_AI_MAXDEPTH))
-		{
-			currentnode = *next;
-			//check if we have come to any of the other keyword nodes.
-			for (it = keywords.begin(); it != keywords.end(); ++it)
-			{
-				
-				if ((currentnode == *it) && 
-					(foundnodes.find(*it) == foundnodes.end()))
-				{ // if we arrived to a previously not found node.
-					unsigned pathnode = currentnode;
-					TNodeLinks::iterator node;
-					
-					vector<unsigned>::size_type revOffset = results.size();
-					while ( 
-						   (( (node = previousnode.find(pathnode)) 
-							!= previousnode.end() ))
-						  && (foundnodes.find(pathnode) == foundnodes.end())
-						   )
-					{
-						results.push_back(node->second); //push previous of
-						                                 //pathnode 
-						pathnode=node->second;
-					}
-					foundnodes[currentnode] = true; // mark node as found
-					blacknodes.clear(); // clear all black nodes.
-					graynodes.clear(); // clear all gray nodes
-					// partial reverse.
-					reverse(results.begin() + revOffset, results.end()); 
-					results.push_back(currentnode); // push last node :P
-					if (foundnodes.size() >= keywords.size()) 
-					{
-						finished = true;
-					}
-					//otherwise, we are not finished, begin exploring again
-					nodecount = 0; //reset nodecount
-					keynode = currentnode;
-					graynodes.push_back(keynode);
-					break; //break the for loop. current node is setup right.
-				}
-			} //for each keyword	
-		}
-		else
-		{ //fully expanded tree, but no next keyword found, 
-		  //or expanded past limit
-			graynodes.clear();
-			blacknodes.clear();
-			//results.push_back(keynode); //push keynode anyway
-			if ((previousnode.find(keynode))->second == 0) //if nobody arrived 
-				foundnodes.erase(keynode); //to it before, unmark found
-			
-			deadnodes[keynode] = true; // mark as dead (non-expandable)
-			results.push_back(0); // add a zero to signify lack of connector
-			
-			// pick any node not in foundnodes as the next node to resume.
-			for (it = keywords.begin(); it != keywords.end(); ++it)
-			{
-				if (   (foundnodes.find(*it) == foundnodes.end())
-					&& (deadnodes.find(*it) == deadnodes.end())  )
-				{ //node not found and not dead...
-					keynode = *it; //next key node from which we begin
-					foundnodes[keynode] = true;
-					currentnode = keynode;
-					previousnode[keynode] = 0;
-					graynodes.push_back(keynode);
-					nextassigned = true;
-					nodecount = 0;
-					break;
-				}
-			}
-		} //assigning next node done.
-		
-		if ((foundnodes.size() >= keywords.size()) || (graynodes.size() == 0))
-			finished = true;
-	} // done finding the path (or a partial path)
-	  //return whatever results found.
-	return results;
-	
+	query << ";";
+	db.Query(query.str());
+	return convert<unsigned>(db.GetLastResult()[0]);
 }
-
 
 void CMarkov::savedata(const string& sfile)
 {
-	ofstream f(sfile.c_str());
-	for (newmarkov<MARKOV_MAXORDER>::model::iterator i1
-			= mdata.begin(); i1 != mdata.end(); ++i1)
-	for (newmarkov<MARKOV_MAXORDER-1>::model::iterator i2
-			= i1->second.begin(); i2 != i1->second.end(); ++i2)
-	for (newmarkov<MARKOV_MAXORDER-2>::model::iterator i3
-			= i2->second.begin(); i3 != i2->second.end(); ++i3)
-	for (newmarkov<MARKOV_MAXORDER-3>::model::iterator i4
-			= i3->second.begin(); i4 != i3->second.end(); ++i4)
-	for (newmarkov<MARKOV_MAXORDER-4>::model::iterator i5
-			= i4->second.begin(); i5 != i4->second.end(); ++i5)
-	for (newmarkov<MARKOV_MAXORDER-5>::model::iterator i6
-			= i5->second.begin(); i6 != i5->second.end(); ++i6)
-		f << i1->first << " " 
-		  << i2->first << " "
-		  << i3->first << " "
-		  << i4->first << " "
-		  << i5->first << " " 
-		  << i6->first << " "
-		  << i6->second << endl;
-	f.close();
+
 }
 
 long int CMarkov::readdata(const string& sfile)
 {
-	ifstream f(sfile.c_str());
-	unsigned i1, i2, i3, i4, i5, i6, val;
-	if (f.is_open())
-	{
-		while (!f.eof())
-		{
-			f >> i1 >> i2 >> i3 >> i4 >> i5 >> i6 >> val;
-			mdata[i1][i2][i3][i4][i5][i6] = val;
-			internalCount += val;
-		}
-		f.close();
-	}
+	Reindex();
+	count();
 	return internalCount;
 }
+
+vector<unsigned> CMarkov::partial(const vector<unsigned>& head, 
+								  unsigned end, unsigned method)
+{
+	unsigned markov_nodes = method + 1;
+	if (markov_nodes >= MARKOV_MAXORDER) markov_nodes = MARKOV_MAXORDER-1;
+	unsigned real_head_size = std::min((unsigned)head.size(),markov_nodes); 
+	
+	map<unsigned, bool> blacknodes;
+	
+	deque<unsigned>		graynodes;
+	deque<unsigned>::iterator next;
+	
+	TNodeLinks previousnode;
+	
+	// Filling up some previous nodes upto real head size.
+	for (unsigned i = head.size(); i > head.size() - real_head_size; --i)
+	{
+		// if its the first node in the head, it "has no previous"
+		if (i != 1)
+			previousnode[head[i-1]] = head[i-2];
+	}
+	
+	bool finished = false;
+	
+	unsigned currentnode = head[head.size() - 1];
+	graynodes.push_back(currentnode);
+	unsigned querycount = 0;
+	while (!finished)
+	{
+		next = graynodes.begin();
+		if (next != graynodes.end())
+		{
+			currentnode = *next;
+			blacknodes[currentnode] = true;
+		}
+		else { break; }
+		stringstream querytwo; querytwo << " WHERE 1=1 ";
+		unsigned backtrack_node = currentnode;
+		unsigned nSelect = 0;
+		while (true) { 
+			++nSelect; 
+			if (nSelect >= markov_nodes) break;
+			TNodeLinks::iterator backtrack_nodex 
+				= previousnode.find(backtrack_node);
+			if (backtrack_nodex == previousnode.end()) break;
+			backtrack_node = backtrack_nodex->second;
+		}
+		backtrack_node = currentnode;
+		unsigned i;
+		for (i = 0; i < nSelect; ++i)
+		{
+			querytwo << " AND id" << (nSelect-i) << "=" << backtrack_node;
+			TNodeLinks::iterator backtrack_nodex 
+				= previousnode.find(backtrack_node);
+			if (backtrack_nodex == previousnode.end()) break;
+			backtrack_node = backtrack_nodex->second;
+		}
+		querytwo << ";";
+		stringstream queryone;
+		queryone << "SELECT id" << (nSelect + 1) << " FROM markov ";
+		db.Query(queryone.str() + querytwo.str()); //Get all connected nodes.
+		vector<string> v;
+		while (( (v = db.GetNextResult()).size() )) 
+		{
+			unsigned unode = convert<unsigned>(v[0]);
+			if ((blacknodes.find(unode) == blacknodes.end()) // node not black
+				&& (previousnode.find(unode) == previousnode.end()))
+			{
+				graynodes.push_back(unode);  //add to explorable list
+				previousnode[unode] = currentnode;
+				if (unode == end) finished = true;
+			}
+		}
+		if (!graynodes.size()) break;
+		graynodes.pop_front();
+		if (++querycount > TRIP_AI_MAXNODES) break;
+	}
+	//exit(1);
+	if (finished) { // we have a path
+		vector<unsigned> result;
+		unsigned backtrack_node = end;
+		while (backtrack_node !=  head[head.size() - 1])
+		{
+			result.push_back(backtrack_node);
+			backtrack_node = previousnode[backtrack_node];
+		}
+		reverse(result.begin(), result.end());
+		result.insert(result.begin(), head.begin(), head.end());
+		return result;
+	}
+	else { // we ran out of nodes to explore
+		vector<unsigned> result;
+		result.insert(result.begin(), head.begin(), head.end());
+		result.push_back(0);
+		result.push_back(end);
+		return result;
+	}
+}
+
+
+vector<unsigned> CMarkov::partialreverse(unsigned head, 
+										 unsigned end, unsigned method)
+{
+	unsigned markov_nodes = method + 1;
+	if (markov_nodes >= MARKOV_MAXORDER) markov_nodes = MARKOV_MAXORDER-1;
+	map<unsigned, bool> blacknodes;
+	
+	deque<unsigned>		graynodes;
+	deque<unsigned>::iterator next;
+	
+	TNodeLinks next_node;
+	
+	unsigned currentnode = end;
+	graynodes.push_back(currentnode);
+	unsigned querycount = 0;
+	bool finished = false;
+	while (!finished)
+	{
+		next = graynodes.begin();
+		if (next != graynodes.end())
+		{
+			currentnode = *next;
+			blacknodes[currentnode] = true;
+		}
+		else { break; }
+		stringstream querytwo; querytwo << " WHERE 1=1 ";
+		unsigned backtrack_node = currentnode;
+		unsigned nSelect = 0;
+		while (true) { 
+			++nSelect; 
+			if (nSelect >= markov_nodes) break;
+			querytwo << " AND id" << (nSelect+1) << "=" << backtrack_node;
+			TNodeLinks::iterator backtrack_nodex = 
+				next_node.find(backtrack_node);
+			if (backtrack_nodex == next_node.end()) break;
+			backtrack_node = backtrack_nodex->second;
+		}
+		querytwo << ";";
+		stringstream queryone;
+		queryone << "SELECT id1 FROM markov ";
+		db.Query(queryone.str() + querytwo.str()); //Get all connected nodes.
+		vector<string> v;
+		while (( (v = db.GetNextResult()).size() )) 
+		{
+			unsigned unode = convert<unsigned>(v[0]);
+			if ((blacknodes.find(unode) == blacknodes.end()) // node not black
+				&& (next_node.find(unode) == next_node.end()))
+			{
+				graynodes.push_back(unode);  //add to explorable list
+				next_node[unode] = currentnode;
+				if (unode == head) 
+				{
+					finished = true;
+					break;
+				}
+			}
+		}
+		if (!graynodes.size()) break;
+		graynodes.pop_front();
+		if (++querycount > TRIP_AI_MAXNODES) break;
+	}
+	if (finished) { // we have a path
+		vector<unsigned> result;
+		unsigned backtrack_node = head;
+		while (backtrack_node != end)
+		{
+			result.push_back(backtrack_node);
+			backtrack_node = next_node[backtrack_node];
+		}
+		result.push_back(end);
+		return result;
+	}
+	else { // we ran out of nodes to explore
+		vector<unsigned> result;
+		result.push_back(head);
+		result.push_back(0);
+		result.push_back(end);
+		return result;
+	}
+}
+
+vector<vector<unsigned> > CMarkov::connect(const vector<unsigned>& keywords, 
+										  unsigned method,
+										  long long perm_begin,
+										  long long perm_end)
+{
+	vector<vector<unsigned> > permutations;
+	if (keywords.size() <= 1) { 
+		permutations.push_back(keywords); 
+		return permutations; 
+	}
+	vector<unsigned> permutation = keywords;
+	sort(permutation.begin(), permutation.end());
+	if (perm_begin <= 0) permutations.push_back(permutation);
+	long long perm_id = 1;
+	while (std::next_permutation(permutation.begin(), permutation.end()))
+	{
+		if (((perm_end < 0) || (perm_id < perm_end)) && (perm_id > perm_begin))
+		permutations.push_back(permutation);
+		++perm_id;
+	}
+	all(permutations, method);
+	return permutations;
+}
+
+
+
+vector<vector<unsigned> > CMarkov::dconnect(const vector<unsigned>& keywords, 
+											unsigned method, 
+											unsigned MAXPERMS)
+{
+	vector<vector<unsigned> > permutations;
+	if (keywords.size() <= 1) { 
+		permutations.push_back(keywords); 
+		return permutations; 
+	}
+	vector<unsigned> permutation;
+	map<unsigned, bool> used;
+	for (unsigned i = 0; i < MAXPERMS; ++i)
+	{
+		permutation.clear(); used.clear();		
+		
+		for (unsigned j = 0; j < keywords.size(); ++j)
+		{
+			unsigned k = unsigned(uniform_deviate(rand()) * keywords.size());
+			unsigned element = keywords[k];
+			if (used.find(element) == used.end())
+			{
+				used[element] = true;
+				permutation.push_back(element);
+			}
+		}
+		permutations.push_back(permutation);
+	}
+	all(permutations, method);
+	return permutations;
+}
+
+void CMarkov::all(vector<vector<unsigned> >& permutations, const unsigned& method)
+{
+#ifdef PARTIAL_CACHING
+	map<vector<unsigned>, vector<unsigned> > headcache;
+ 	map<vector<unsigned>, vector<unsigned> >::iterator headsearch;
+#endif
+
+	vector<vector<unsigned> > extras;
+	//vector<unsigned> permutation;	
+	unsigned permusize = permutations.size(); // size of original permutations
+	for (unsigned i = 0; i < permusize; ++i)
+	{ // for each permutation
+		vector<unsigned>& permutation = permutations[i];
+		permutation.insert(permutation.begin(), 0);
+		permutation.push_back(0);
+		vector<unsigned> head; head.push_back(permutation[0]);
+		for (unsigned j = 1; j < permutation.size(); ++j)
+		{ // connect it to the end
+#ifdef PARTIAL_CACHING
+			headsearch = headcache.end();
+			vector<unsigned> locator;
+			
+			if (j < permutation.size() - 2)
+			{
+				locator.assign(permutation.begin(), 
+							   permutation.begin()+j+1);
+				headsearch = headcache.find(locator);
+			}
+			
+			if (headsearch != headcache.end()) // already cached partial connector
+			{
+				head = headsearch->second;
+			}
+			else
+			{
+#endif
+				if (j > 1)
+				{
+					head = partial(head,permutation[j],method);
+					// extra answers?
+					extras.push_back(partial(head,0,method));
+				}
+				else
+				{
+					head = partialreverse(head[0],permutation[j],method);
+				}
+#ifdef PARTIAL_CACHING
+				if (j < permutation.size() - 2)
+					headcache[locator] = head;
+			}
+#endif			
+		}
+		permutations[i] = head; // and add it to results
+	}
+	permutations.insert(permutations.begin(), extras.begin(), extras.end());
+}
+
+unsigned CMarkov::count() {
+	db.Query("SELECT COUNT(val) FROM markov;");
+	internalCount = convert<unsigned>(db.GetLastResult()[0]);
+	return internalCount; 
+}
+
+void CMarkov::BeginTransaction()
+{
+	db.Query("BEGIN;");
+}
+
+
+void CMarkov::EndTransaction()
+{
+	db.Query("END;");
+}
+void CMarkov::ClearAll()
+{
+	db.Query("DELETE FROM markov;");
+}
+
+void CMarkov::AddRow(const string& row)
+{
+	db.Query(string("INSERT or REPLACE INTO markov VALUES (") + row + ")");
+}
+

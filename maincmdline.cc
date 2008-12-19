@@ -17,6 +17,8 @@
  */
 
 #include <sys/types.h>
+#include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -33,9 +35,9 @@
 
 using namespace std;
 
-AI tai;
+AI tai("botdata/triplie.db");
 
-unsigned long int defmodel=2;
+unsigned long int defmodel=1;
 
 bool shouldtalk;
 
@@ -43,6 +45,13 @@ bool shouldtalk;
 
 /* ---------------- */
 
+
+double GetTickCount()
+{
+	timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec * 1000.0) + (tv.tv_usec / 1000.0);
+}
 
 
 /* ****************************************
@@ -72,7 +81,7 @@ int main(int argc, char** argv) {
 
 
 	shouldtalk=true;
-	tai.setpermute(1);
+	tai.connect_to_workers("workers.dat");
 	while (shouldtalk) {
 		getline(cin,theline);
         for(x=0;x<theline.size();x++) { theline[x]=tolower(theline[x]); }
@@ -93,19 +102,19 @@ int main(int argc, char** argv) {
 							cout << "!ai model set to " << defmodel << endl << endl;
 						}
 						if (tokens[1] == "permute") {
-							int defmodel = atol(tokens[2].c_str());
-							tai.setpermute(defmodel);
-							cout << "!ai model set to " << defmodel << endl << endl;
+							int permutesize = atol(tokens[2].c_str());
+							tai.setpermute(permutesize);
+							cout << "!ai permuting " << permutesize << endl << endl;
 						}
-						if (tokens[1] == "dijkstra")
+						if (tokens[1] == "random")
 						{
 							if (tokens[2] == "on") {
-								tai.useDijkstra = true;
-								cout << "!Using dijkstra." << endl << endl;
+								tai.useRandom = true;
+								cout << "!Using random." << endl << endl;
 							}
 							else {
-								tai.useDijkstra = false;
-								cout << "!Using BFS." << endl << endl;
+								tai.useRandom = false;
+								cout << "!Using all." << endl << endl;
 							}
 						}
 					}
@@ -114,14 +123,29 @@ int main(int argc, char** argv) {
             else {
                 //reply and learn
                 //reply
+				double clockstart = GetTickCount();
 				tai.setdatastring(subtokstring(tokens,0,100," "));
+				//cout << ((double(clock()) - clockstart)
+				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
+				//clockstart = clock();
 				tai.extractkeywords();
+				//cout << ((double(clock()) - clockstart)
+				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
+				//clockstart = clock();
 				tai.expandkeywords();
-				tai.connectkeywords(defmodel); 
+				//cout << ((double(clock()) - clockstart)
+				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
+				//clockstart = clock();
+				tai.connectkeywords(defmodel);
+				//cout << ((double(clock()) - clockstart)
+				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
+				//clockstart = clock();
 				aireply=tai.getdatastring("(console)");
+				double tsec =(GetTickCount() - clockstart);
 				if (aireply == "") { aireply = "*shrug*"; }
 				cout << "> "
-				     << aireply << endl;
+					 << aireply 
+					 << " (" << tsec << ")" << endl;
 
 
                 //learn

@@ -24,6 +24,26 @@ Other features: textparser.unspaced("-_");
       <summary>Refactor the huge AI class</summary>
       <comment>It should be split to at least 2 classes one being a dictionary class, the other a graph class. both should then become objects in the AI class.</comment>
     </item>
+    <item>
+      <attribute id="1227498277" priority="2" done="0" start_date="733370" enddate="733376" notify="1" endtime="-60" last_edited="1227504171"/>
+      <summary>triprotomaster.cc</summary>
+      <comment>Finish triprotomaster.cc
+ 
+A master-client class that connects to one slave server, possibly using either a separate thread, or
+a non-blocking client socket.
+
+Interface should have at least these functions:
+
+Defined enum of request types
+
+1) void Initialize(host,port) - opens a connection to slave
+
+2) void SendRequest(type, data) - sends the specified request to slave
+
+3) bool RequestComplete() - returns True if last request is completed
+
+4) string ReplyData() - if RequestComplete() is true, returns data gathered from request, otherwise throws</comment>
+    </item>
   </category>
   <category title="Business" place="1"/>
   <category title="Unfiled" place="2"/>

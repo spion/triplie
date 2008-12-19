@@ -25,6 +25,7 @@
 #include <map>
 #include <fstream>
 #include <string>
+#include "sqlite_class.h"
 
 using std::ifstream;
 using std::ofstream;
@@ -36,12 +37,15 @@ typedef std::map<unsigned, TNodeLinks > TGraphH;
 
 class CGraph
 {
+	private:
+		string table_name;
+		SQLite db;
 	public:
-		TGraphH forward;
-		TGraphH backward;
+		void CloseDB() { db.CloseDB(); }
+		void OpenDB() { db.OpenDB(); }
 		unsigned long count;
 	
-		CGraph() { count = 0; }
+		CGraph(string dbf, string tblname); 
 		void AddLink(unsigned x, unsigned y, unsigned val);
 		void IncLink(unsigned x, unsigned y);
 		void DelLink(unsigned x, unsigned y);
@@ -53,13 +57,16 @@ class CGraph
 		unsigned CountFwdLinksStrength(unsigned x);
 		unsigned CountBckLinks(unsigned x);
 		unsigned CountBckLinksStrength(unsigned x);
-		TGraphH::iterator GetFwdLinks(unsigned node);
-		TGraphH::iterator GetBckLinks(unsigned node);
+		TNodeLinks GetFwdLinks(unsigned node);
+		TNodeLinks GetBckLinks(unsigned node);
 		TGraphH::iterator NonExistant();
 		TGraphH::iterator NonExistantBck();
 	
 		void SaveLinks(const string& sfile);
 		long int ReadLinks(const string& sfile);
+
+		void BeginTransaction();
+		void EndTransaction();
 };
 
 #endif

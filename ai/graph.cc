@@ -20,164 +20,183 @@
  */
 
 #include "graph.h"
+#include <sstream>
+
+
+CGraph::CGraph(string dbf, string tblname):db(dbf) 
+{ 
+	db.Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
+	db.Query("PRAGMA read_uncommited = True;");
+	table_name = tblname;
+	stringstream query;
+	query << "SELECT count(*) FROM " << table_name << ";";
+	db.Query(query.str());
+	count = convert<unsigned>(db.GetLastResult()[0]); 
+}
 
 void CGraph::AddLink(unsigned x, unsigned y, unsigned val)
 {
-	forward[x][y] = val;
-	backward[y][x] = val;
+	stringstream query;
+	query << "INSERT or IGNORE INTO " << table_name
+		  << " VALUES (" << x << "," << y << "," << val << ");";
+	db.Query(query.str());
+	//forward[x][y] = val;
+	//backward[y][x] = val;
 	count += val;
 }
 
 void CGraph::DelLink(unsigned x, unsigned y)
 {
-	forward[x][y] = backward[y][x] = 0;
+	stringstream query;
+	query << "DELETE FROM " << table_name
+		  << " WHERE id1=" << x << " AND id2=" << y << ";";
+	db.Query(query.str());
+	
+	//forward[x][y] = backward[y][x] = 0;
 }
 
 void CGraph::IncLink(unsigned x, unsigned y)
 {
-	++forward[x][y];
-	++backward[y][x];
+	stringstream query;
+	query << "UPDATE " << table_name << " SET val=val+1 "
+		  << " WHERE id1=" << x << " AND id2=" << y << ";";
+	db.Query(query.str());
 	++count;
 }
 
 unsigned CGraph::CheckLink(unsigned x, unsigned y)
 {
 	unsigned result = 0;
-	TGraphH::iterator links = forward.find(x);
-	if (links != forward.end())
-	{
-		TNodeLinks::iterator node = links->second.find(y);
-		if (node != links->second.end())
-			result += node->second;
-	}
+	stringstream query;
+	query << "SELECT sum(val) FROM " << table_name 
+		  << " WHERE (id1 = " << x << ") AND (id2 = " << y << ");"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);
 	return result;
 }
 
 unsigned CGraph::CountFwdLinks(unsigned x)
 {
 	unsigned result = 0;
-	TGraphH::iterator links = forward.find(x);
-	if (links != forward.end())
-	{
-		result += links->second.size();
-	}	
+	stringstream query;
+	query << "SELECT count(id2) FROM " << table_name 
+		  << " WHERE (id1 = " << x << ");"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);	
 	return result;	
 }
 
 unsigned CGraph::CountBckLinks(unsigned x)
 {
 	unsigned result = 0;
-	TGraphH::iterator links = backward.find(x);
-	if (links != backward.end())
-	{
-		result += links->second.size();
-	}	
+	stringstream query;
+	query << "SELECT count(id1) FROM " << table_name 
+		  << " WHERE (id2 = " << x << ");"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);	
 	return result;	
 }
 
 unsigned CGraph::CountLinks(unsigned x)
 {
-	return CountFwdLinks(x) + CountBckLinks(x);
+	unsigned result = 0;
+	stringstream query;
+	query << "SELECT (SELECT count(id1) FROM " << table_name 
+		  << " WHERE (id2 = " << x << ")) + "
+		  << "(SELECT count(id2) FROM " << table_name 
+		  << " WHERE (id1 = " << x << "));"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);	
+	return result;	
 }
 
 unsigned CGraph::CountBckLinksStrength(unsigned x)
 {
 	unsigned result = 0;
-	TNodeLinks::iterator node;
-	TGraphH::iterator links = backward.find(x);
-	if (links != backward.end())
-	{
-		for (node = links->second.begin(); node != links->second.end(); ++node)
-		{
-			result += node->second;
-		}
-	}
+	stringstream query;
+	query << "SELECT sum(val) FROM " << table_name 
+		  << " WHERE (id2 = " << x << ");"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);	
 	return result;	
 }
 
 unsigned CGraph::CountFwdLinksStrength(unsigned x)
 {
 	unsigned result = 0;
-	TNodeLinks::iterator node;
-	TGraphH::iterator links = forward.find(x);
-	if (links != forward.end())
-	{
-		for (node = links->second.begin(); node != links->second.end(); ++node)
-		{
-			result += node->second;
-		}
-	}
+	stringstream query;
+	query << "SELECT sum(val) FROM " << table_name 
+		  << " WHERE (id1 = " << x << ");"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);	
 	return result;	
 }
 
 unsigned CGraph::CountLinksStrength(unsigned x)
 {
-	return CountFwdLinksStrength(x) + CountBckLinksStrength(x);
+	unsigned result = 0;
+	stringstream query;
+	query << "SELECT (SELECT sum(val) FROM " << table_name 
+		  << " WHERE (id2 = " << x << ")) + "
+		  << "(SELECT sum(val) FROM " << table_name 
+		  << " WHERE (id1 = " << x << "));"; 
+	db.Query(query.str());
+	result += convert<unsigned>(db.GetLastResult()[0]);	
+	return result;
 }
 
-TGraphH::iterator CGraph::GetFwdLinks(unsigned x)
+TNodeLinks CGraph::GetFwdLinks(unsigned x)
 {
-	TGraphH::iterator it = forward.find(x);
-	return it;
+	TNodeLinks n;
+	stringstream query;
+	query << "SELECT id2, val FROM " << table_name
+		  << " WHERE (id1 = " << x << ");";
+	db.Query(query.str());
+	vector<string> v = db.GetNextResult();
+	while (v.size() > 1)
+	{
+		n[convert<unsigned>(v[0])] = convert<unsigned>(v[1]);
+		v = db.GetNextResult();
+	}
+	return n;
 }
 
-TGraphH::iterator CGraph::GetBckLinks(unsigned x)
+TNodeLinks CGraph::GetBckLinks(unsigned x)
 {
-	TGraphH::iterator it = backward.find(x);
-	return it;
+	TNodeLinks n;
+	stringstream query;
+	query << "SELECT id1, val FROM " << table_name
+		  << " WHERE (id2 = " << x << ");";
+	db.Query(query.str());
+	vector<string> v = db.GetNextResult();
+	while (v.size() > 1)
+	{
+		n[convert<unsigned>(v[0])] = convert<unsigned>(v[1]);
+		v = db.GetNextResult();
+	}
+	return n;
 }
 
-TGraphH::iterator CGraph::NonExistant()
-{
-	return forward.end();
-}
-
-TGraphH::iterator CGraph::NonExistantBck()
-{
-	return backward.end();
-}
 
 
 void CGraph::SaveLinks(const string& sfile)
 {
-	ofstream myfile (sfile.c_str());
-	TGraphH::iterator iter;
-	TNodeLinks::iterator subit;
-  	if (myfile.is_open()) {
-		for (iter=forward.begin();iter!=forward.end();iter++)
-		{
-			for(subit=iter->second.begin();subit!=iter->second.end();subit++)
-			{
-				if (subit->second)
-				myfile << iter->first << " "  
-					   << subit->first << " " 
-					   << subit->second << endl;
 
-			}
-
-		}
-	}
-	myfile.close();
 }
 
 long int CGraph::ReadLinks(const string& sfile)
 {
-	long int retval; unsigned int l1; unsigned int l2; unsigned int l3;
-	ifstream myfile (sfile.c_str());
-	retval=0;
-	//relcount=0;
-	if (myfile.is_open()) {
-		while (! myfile.eof() ) {
-			l1=0; l2=0; l3=0;
-			myfile >> l1 >> l2 >> l3;
-			if ((l1>0) && (l2>0) && (l3>0)) {
-				forward[l1][l2]=l3;
-				backward[l2][l1]=l3;
-				retval+=l3;
-			}
-		}
-		myfile.close();
-	}
-	count = (unsigned)retval;
-	return retval;
+	return count;
 }
+
+void CGraph::BeginTransaction()
+{
+	db.Query("BEGIN;");
+}
+
+
+void CGraph::EndTransaction()
+{
+	db.Query("END;");
+}
+

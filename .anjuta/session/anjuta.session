@@ -1,11 +1,22 @@
 
 [Anjuta]
 Maximized=1
-Geometry=1280x774+0+2
+Geometry=1280x776+0+1
 
 [File Loader]
-Files=file:///home/spion/Projects/triplie/src/ai/ai.cc#318%%%file:///home/spion/Projects/triplie/src/ai/ai.hpp#90%%%file:///home/spion/Projects/triplie/src/ai/dictionary.cc#34%%%file:///home/spion/Projects/triplie/src/ai/dictionary.h#36%%%file:///home/spion/Projects/triplie/src/ai/graph.cc#145%%%file:///home/spion/Projects/triplie/src/ai/graph.h#50%%%file:///home/spion/Projects/triplie/src/ai/markov.cc#184%%%file:///home/spion/Projects/triplie/src/ai/markov.h#44%%%file:///home/spion/Projects/triplie/src/ai/tokens.cc#1%%%file:///home/spion/Projects/triplie/src/ai/tokens.h#1%%%file:///home/spion/Projects/triplie/src/irc/IRC.cc#51%%%file:///home/spion/Projects/triplie/src/irc/IRC.h#1%%%file:///home/spion/Projects/triplie/src/ai/hash_table.h#1%%%file:///home/spion/Projects/triplie/src/main.cc#186%%%file:///home/spion/Projects/triplie/src/maincmdline.cc#51%%%file:///usr/include/c%2B%2B/4.1.3/bits/basic_string.h#1131
+Files=file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/ai.hpp#87%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/main.cc#546%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/mainworker.cc#54%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/triproto.cc#49%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/triproto.h#36%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/triprotomaster.cc#59%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/triprotomaster.h#54%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/ai.cc#206%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/Socket.cpp#153%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/Socket.h#47%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/newmarkov.h#39%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/ServerSocket.cpp#1%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/protocol/ServerSocket.h#1%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/newmarkov.cc#287%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/maincmdline.cc#49%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/sqlite_class.h#22%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/context.cc#57%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/context.h#1%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/ai/dictionary.cc#4%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/Makefile#1%%%file:///home/spion/Projects/triplie/src/svn/triplie-sqlite/irc/IRC.cc#260
 
 [Execution]
+Program arguments=
+Program uri=
 Run in terminal=1
+Working directories=
+Environment variables=
+
+[Build]
+Configuration list=1:Default:%%%1:Debug:Debug%%%1:Profiling:Profiling%%%1:Optimized:Optimized
+Selected Configuration=Default
+
+[Debugger]
+Source directories=
 Stop at beginning=2

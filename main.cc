@@ -30,10 +30,13 @@
 
 #include "irc/IRC.h"
 #include "wildcard/wildcards.cpp"
-#include "ai/tokens.h"
 #include "ai/ai.hpp"
 #include <cctype>
 #include <fstream>
+
+#include <ctime>
+
+#define TRIP_DISTRUBUTED 1
 
 //#include <cstdlib>
 
@@ -41,7 +44,7 @@
 using namespace std;
 
 IRC conn;
-AI tai;
+AI tai("botdata/triplie.db");
 CAdminList admins;
 CAdminList ignores;
 unsigned int aimodel;
@@ -95,6 +98,9 @@ int main(int argc, char** argv) {
 	shouldreconnect=true;
 
 	/* Displaying a banner with info... */
+	#ifdef TRIP_DEBUG
+	cout << "Debug mode enabled." << endl;
+	#endif
 	cout << "Triple AI bot started" << endl
 	     << "Admin database@'admins.dat' words@'word.dat' rels@'rels.dat'" << endl;
 
@@ -104,27 +110,29 @@ int main(int argc, char** argv) {
 	cout << "Default channel: " << defchan << endl;
 	//* this might need another seed in WIN32 *//
 	srand(time(0));
-
+	
 	readadmins();
 	readignores();
 	tai.readalldata("botdata");
 	cout << tai.countwords() << " words, ";
-	cout << tai.countrels() << " relations known." << endl;
+	cout << tai.countrels() << " relations, ";
+	cout << tai.countvrels() << " associations in database." << endl;
 
 	#ifdef TRIP_DEBUG
 	cout << "Running in debug mode..." << endl;
 	#else
 	/* fork to background and prevent running twice */
+	tai.CloseDB();
 	forktobg();
+	tai.OpenDB();
 	#endif
 	aimodel = 2;
-	tai.setpermute(1);
 	/* start IRC session */
 	#ifdef TRIP_DEBUG
 	cout << "Hooking irc commands to functions..." << endl;
 	#endif
-	conn.hook_irc_command("PRIVMSG", &procprivm);
-	conn.hook_irc_command("376", &end_of_motd);
+	conn.hook_irc_command((char *)"PRIVMSG", &procprivm);
+	conn.hook_irc_command((char *)"376", &end_of_motd);
 	#ifdef TRIP_DEBUG
 	cout << "Connecting to the server..." << endl;
 	#endif
@@ -132,6 +140,9 @@ int main(int argc, char** argv) {
 	#ifdef TRIP_DEBUG
 	cout << "Entering message loop..." << endl;
 	#endif
+	
+	tai.useRandom = true;
+	tai.connect_to_workers("workers.dat");
 	while (shouldreconnect) {
 		conn.message_loop();
 		if (shouldreconnect) {
@@ -143,6 +154,8 @@ int main(int argc, char** argv) {
 			conn.start(server.c_str(), defport, defnick.c_str(), defuser.c_str(), defname.c_str(), "");
 		}
 	}
+	
+	tai.SendAllSlavesAndWait("06 \n");
 	tai.savealldata(string("botdata"));
 	#ifdef TRIP_DEBUG
 	cout << "Loop exit, triplie shutdown." << endl;
@@ -158,8 +171,8 @@ void forktobg() {
 	setsid();
 	for (i=getdtablesize();i>=0;--i) close(i);
 	i=open("/dev/null",O_RDWR); /* open stdin */
-	dup(i); /* stdout */
-	dup(i); /* stderr */
+	int k = dup(i); /* stdout */
+	k = dup(i); /* stderr */
 	#ifdef linux
 	int lfp; 
 	char fstr[10];
@@ -168,7 +181,7 @@ void forktobg() {
 	if (lfp<0) exit(1);
 	if (lockf(lfp,F_TLOCK,0)<0) exit(0);
 	sprintf(fstr,"%d\n",getpid());
-	write(lfp,fstr,strlen(fstr));
+	k = write(lfp,fstr,strlen(fstr));
 	#endif
 	signal(SIGCHLD,SIG_IGN); /* ignore child */
 	signal(SIGTSTP,SIG_IGN); /* ignore tty signals */
@@ -206,12 +219,11 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 
     IRC* irc_conn=(IRC*)conn;
 
-	char dictsize[10];
-	char relcountstr[15];
+	char dictsize[11] = {0};
+	char relcountstr[16] = {0};
 
 	/* code */
-	sprintf(dictsize,"%u",tai.countwords()+1);
-	sprintf(relcountstr,"%ld",tai.countrels());
+
 
     msg = string(params);
 
@@ -222,6 +234,14 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 
 	msgtarget = hostd->target;
 
+	string wheretosend;
+	if ((msgtarget[0] == '#') || (msgtarget[0] == '&')) {
+		wheretosend = msgtarget;
+	}
+	else {
+		wheretosend = rnick;
+	}
+	
 	mynick = irc_conn->current_nick();
 
 	for(x=0;x<msg.size();x++) { msg[x]=tolower(msg[x]); }
@@ -264,7 +284,7 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 					rawcmd = subtokstring(tokens,1,100," ");
 				}
 				else { rawcmd = "Quit"; }
-				irc_conn->quit(rawcmd.c_str());
+				irc_conn->quit((string(":") + rawcmd).c_str());
 			}
 			else if (tokens[0] == dc+"die") {
 				if (x>=2) {
@@ -272,53 +292,58 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				}
 				else { rawcmd = "Quit"; }
 				shouldreconnect=false;
-				irc_conn->quit(rawcmd.c_str());
+				irc_conn->quit((string(":") + rawcmd).c_str());
+				sleep(1);
 			}
-			else if ((tokens[0] == dc+"dict") && (x>=2)) {
+			else if ((tokens[0] == dc+"db") && (x>=2)) {
 
-				if (tokens[1] == "words") {
-						//itoa(dictind,rawcmd,10);
-						rawcmd = dictsize;
-						rawcmd=string("my knowledge is ")+rawcmd+" words";
-						irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
-				}
-				if (tokens[1] == "rels") {
-						rawcmd = relcountstr;
-						rawcmd=string("i know of ")+rawcmd+" relations";
-						irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
-				}
-				if (tokens[1] == "save") {
-						rawcmd=string("saving my words and relations.");
-						tai.savealldata("botdata");
-						irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
+				if (tokens[1] == "stats") {
+					sprintf(dictsize,"%u",tai.countwords()+1);
+					sprintf(relcountstr,"%ld",tai.countrels());
+					rawcmd = dictsize;
+					rawcmd=string("database has ")+rawcmd+" words, ";
+					rawcmd+= string(relcountstr)+" relations, ";
+					rawcmd+= convert<string>(tai.countvrels()) + " associations";
+					irc_conn->privmsg(wheretosend.c_str(),rawcmd.c_str());
 				}
 			}
 			else if ((tokens[0] == dc+"ai") && (x>=3)) {
 				if (tokens[1] == "order") {
 					aimodel = atol(tokens[2].c_str());
-					irc_conn->privmsg(msgtarget.c_str(),
+					irc_conn->privmsg(wheretosend.c_str(),
 									  "AI markov model order changed.");
 				}
 				if (tokens[1] == "permute") {
 					aipermute = atol(tokens[2].c_str());
+					if (aipermute == 0) { aipermute = 1; }
 					tai.setpermute(aipermute);
-					irc_conn->privmsg(msgtarget.c_str(),"AI permute toggled.");
+					irc_conn->privmsg(wheretosend.c_str(),
+									  "AI permutation size changed.");
 				}
-				if (tokens[1] == "dijkstra")
+				if (tokens[1] == "permutations")
+				{
+					unsigned pcount = atol(tokens[2].c_str());
+					if (!pcount) { pcount = TRIP_AI_MAXPERMUTATIONS; }
+					tai.maxpermute(pcount);
+					irc_conn->privmsg(wheretosend.c_str(),
+									  (string("Maximum random permutations: ") +
+									   convert<string>(pcount)).c_str());				
+				}
+				if (tokens[1] == "random")
 				{
 					if ((tokens[2] == "on") || 
 						(tokens[2] == "yes") ||
 						(tokens[2] == "1") ||
 						(tokens[2] == "true"))
 					{
-						tai.useDijkstra = true;
-						irc_conn->privmsg(msgtarget.c_str(),
-										  "Using dijkstra.");
+						tai.useRandom = true;
+						irc_conn->privmsg(wheretosend.c_str(),
+										  "Using random permutations.");
 					}
 					else {
-						tai.useDijkstra = false;
-						irc_conn->privmsg(msgtarget.c_str(),
-										  "Using BFS.");
+						tai.useRandom = false;
+						irc_conn->privmsg(wheretosend.c_str(),
+										  "Using all permutations (slow).");
 					}
 				}
 				if (tokens[1] == "connect")
@@ -330,16 +355,25 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 					tai.connectkeywords(aimodel);
 					string res = string("Result: ") 
 							   + tai.getdatastring("(null)");
-					irc_conn->privmsg(msgtarget.c_str(), 
+					irc_conn->privmsg(wheretosend.c_str(), 
 							res.c_str());
 					}
 				}
+				/*
+				if (tokens[1] == "associate")
+				{
+					if (x>2)
+					{
+						tai.setdatastring(subtokstrin
+					}
+				}
+				*/
 			}
 			else if  ((tokens[0] == dc+"sleep") && (x>=3))
 			{
 				sleepmin = atol(tokens[1].c_str());
 				sleepmax = atol(tokens[2].c_str());
-				irc_conn->privmsg(msgtarget.c_str(),"Sleep time changed.");
+				irc_conn->privmsg(wheretosend.c_str(),"Sleep time changed.");
 			}
 		}
 		else 
@@ -347,15 +381,21 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 			if ((tokens[0] == mynick) || (msgtarget[0] != '#'))  {
 				/* We have something to learn from, and to reply to! */
 				/* reply */
-				if (x<2) { return 0; } //nothing more to do here, someone is messing.
+				if (msgtarget[0] == '#')
+				{
+					if (x<2) { return 0; } 
+					//nothing more to do here, someone is messing.
 
-				string::size_type lastPos = msg.find_first_not_of(" :,", 0);
-				//finds nick.
-    			lastPos                   = msg.find_first_of(" :,", lastPos);
-    			//finds separator.
-				string::size_type mpos = msg.find_first_not_of(" :,", lastPos);
-				// finds text.
-				rawcmd = msg.substr(mpos,msg.size());
+					string::size_type lastPos = msg.find_first_not_of(" :,", 0);
+					//finds nick.
+    				lastPos                   = msg.find_first_of(" :,", lastPos);
+    				//finds separator.
+					string::size_type mpos = msg.find_first_not_of(" :,", lastPos);
+					// finds text.
+					rawcmd = msg.substr(mpos,msg.size());
+				}
+				else { rawcmd = msg; }
+				string oldrawcmd = rawcmd;
 				tai.setdatastring(rawcmd);
 				tai.extractkeywords();
 				tai.expandkeywords();
@@ -385,7 +425,7 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 										  rawcmd.substr(1).c_str());
 					}
 				}
-				rawcmd = msg.substr(mpos,msg.size());
+				rawcmd = oldrawcmd;
 			}
 			else {
 				string::size_type mpos = msg.find_first_not_of(" :", 0); //finds text.
@@ -393,7 +433,8 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 			}
 			
 			logfile.open("log.txt",ios::app);
-			logfile << "<" << string(hostd->nick) << "> ";
+			logfile << ":: " << time(0) << " " << wheretosend << " "
+					<< string(hostd->nick) << " : ";
 			logfile << rawcmd << endl;
 			logfile.close();
 			//learn

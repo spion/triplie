@@ -1,5 +1,5 @@
-Triplie is an AI bot based on a Nth order Markov model  
-The command line version can be compiled on both linux
+Triplie is an AI bot based on a 5th order Markov model  
+The command line version can be compiled on Linux, BSD
 and Windows
 
 
@@ -14,11 +14,10 @@ Triplie creates a directed graph which is made of
 
 All relations between words have an integer weight.
 They count the number of times the words appeared
-close next to eachother. Separate relation graphs
-are used for predecessors and successors
 
-Here is an example:
 
+
+Here is an example of a Markov model of 1st order:
 
 hello triplie, how are you
 
@@ -47,41 +46,16 @@ Here, 1-> is a successor link with a weight 1, and
       <-1 a predecessor link with a weight 1.
 
 
-The same happens with 2nd order successors and
-predecessors. From the sentence
-
-today is a beautifull day.
-
-two or ordered graphs will be affected, each with
-two types of links
-
-  
-ascii drawing (1)
-
-   _1->___   ___1->__   ___1->___   ___1->__
-  /       \ /        \ /         \ /        \
-today     is          a      beautifull     day
-  \__<-1__/ \__<-1___/ \__<-1___/  \__<-1___/
-
-
-
-ascii drawing (2)
-              _______1->_______
-   _1->______/________   _______\____1->_____
-  /         /         \ /        \           \
-today      is          a      beautifull    day
-  \__<-1____\_________/ \___<-1__/__________/
-             \____<-1___________/
-
-
-and so on, for each successor/predecessor order 
-until (a configurable) N is reached.
+The same happens with 2nd order markov models, but
+in that case a pair of neighbouring words are
+connected to the next word in the sentence. 3rd
+order uses a triplet of neighbouring words, etc.
 
 The final graph is pretty complex and can't be
 represented with ascii drawings.
 
 Obviously, the bot learns language better if the user 
-input has 4 or more words
+input has more words
 
 The associations (context relations) are formed
 when the bot talks to the user. Lets say we have
@@ -150,39 +124,20 @@ steps:
 
 Planned improvements / TODO:
 
-- Grammar parser - using he  "boost spirit" library to
-  build a semantic parser that detects which words in
-  the line are nouns and which are verbs. These words 
-  can be used as "thought atoms"
-
-- Alternatively, connection to the WordNet database to
+- Connection to a WordNet database of words in order to
   extract nouns, verbs and additional context (better)
 
-- Grammar checks and replacements layer that would 
-  replace words like "you" with "I" and vice-versa
-  before giving the answer. This might be needed when
-  training the bot at first, as not enough associations
-  are present at the current keywords could be used.
-
 - Thought atoms brain-tree model - 
-  This will be used to find out how keywords close to
-  each other are related. Lets say we have the line:
-  triplie, a white ball jumps around.
-  This should create a tree node excited by the words
-  "ball" and "jump".
-  Goal: extend the basic keywords to gain aditional
-  knowledge about them (a ball can jump, and jump
-  brings in more associations)
+  At the present moment, triplie has problems with
+  pronouns. They are very important in the current
+  context, but without the context they have no
+  associative meaning because they are common words.
+  A brain-tree will help in connecting these
+  pronouns with the current context and recognise
+  a context pattern when it appears.
 
-- Sandpiles model for feeling atoms - a far-fetched
-  possible experiment in the future
-  More info at:
-  http://en.wikipedia.org/wiki/Bak-Tang-Wiesenfeld_sandpile
-  The basic idea is that enough influence (repeating)
-  of the thought atoms might trigger their attached
-  feeling athoms which are connected to other feeling atoms
-  causing an avalanche which "flow" in the conversation
-  (by exciting various kinds of words) after the next user
-  actions, and influence the way the bot explores his
-  keywords and associations.
-
+- Excitation model for the association network - a possible
+  experiment in the future
+  Using the association network as a neural network
+  by propagating excitation trough it and getting
+  the excited atoms as additional contextual keywords.

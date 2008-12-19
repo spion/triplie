@@ -5,11 +5,6 @@
                  attribute="Location"
                  value="anjuta-devhelp:AnjutaDevhelp"/>
     </plugin>
-    <plugin name="CVS Plugin" mandatory="no">
-        <require group="Anjuta Plugin"
-                 attribute="Location"
-                 value="anjuta-cvs-plugin:CVSPlugin"/>
-    </plugin>
     <plugin name="Class Inheritance" mandatory="no">
         <require group="Anjuta Plugin"
                  attribute="Location"
@@ -54,10 +49,5 @@
         <require group="Anjuta Plugin"
                  attribute="Location"
                  value="anjuta-gtodo:GTodoPlugin"/>
-    </plugin>
-    <plugin name="Subversion" mandatory="no">
-        <require group="Anjuta Plugin"
-                 attribute="Location"
-                 value="anjuta-subversion:Subversion"/>
     </plugin>
 </anjuta>

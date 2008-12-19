@@ -103,15 +103,18 @@ void CContextQueue::learn()
 		//itx fullcontext[0], ity fullcontext[1] connect itx to ity
 	   )
 	{
+		vertical->BeginTransaction();
 		for (it = itx->begin(); it != itx->end(); ++it)
 		{
 			for (jt = ity->begin(); jt != ity->end(); ++jt)
 			{
+				vertical->AddLink(*it,*jt,0);
 				vertical->IncLink(*it,*jt);
 				//cout << "Link: " << dictionary.GetWord(*it)
 				//	 << "->" << dictionary.GetWord(*jt) << endl;
 			}
 		}
+		vertical->EndTransaction();
 	}
 	// and finally, remove all but the last 2 nicks in list.
 	qit = context.begin();

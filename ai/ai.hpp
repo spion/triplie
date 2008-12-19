@@ -26,10 +26,14 @@
 #include "newmarkov.h"
 #include "graph.h"
 #include "context.h"
+#include "tokens.h"
+
+#include "../protocol/triprotomaster.h"
 
 #include <deque>
 
-#define TRIP_MAXKEY 6
+#define TRIP_MAXKEY_DEFAULT 8
+
 #define TRIP_CONTEXT_TIMEOUT 120
 
 using namespace std;
@@ -38,7 +42,11 @@ class AI {
 	private:
 		CDictionary dictionary;
 		CMarkov markov;
-	
+		vector<TriplieMasterProto> slaves;
+
+
+		bool Distributed; 
+
 		//Linguistics model.
 
 		//Moves to CMarkovLang, goes array. It might move to the
@@ -53,7 +61,7 @@ class AI {
 		vector<unsigned> my_dellayed_context;
 		
 		//Goes into CAIPermutator, will be retrieved from there.
-		list<vector<unsigned> > shuffles;
+		vector<vector<unsigned> > shuffles;
 
 		list<float> scores;
 
@@ -76,14 +84,18 @@ class AI {
 
 		//shuffle functions
 		void generateshuffles();
-		void expandshuffles(int method);
+		void scoreshuffles(int method);
 		void keywordsbestshuffle();
 		int aipermute;
+		unsigned maxpermutecount;
 	public:
-		AI();
-
+		AI(string dbf);
+		void CloseDB() { markov.CloseDB(); dictionary.CloseDB(); vertical.CloseDB(); }
+		void OpenDB() { markov.OpenDB(); dictionary.OpenDB(); vertical.OpenDB(); }
+		unsigned TRIP_MAXKEY;
 		const long int countrels();
 		unsigned countwords();
+		const unsigned countvrels();
 	
 		void readalldata(const string& datafolder);
 		void savealldata(const string& datafolder);
@@ -96,8 +108,39 @@ class AI {
 		void extractkeywords();
 		void expandkeywords();
 		void connectkeywords(int method, int nopermute = 0);
-		void setpermute(int permute) { aipermute = permute; }
-		bool useDijkstra;
+		void setpermute(int permute) { TRIP_MAXKEY = permute; }
+		void maxpermute(unsigned num) { maxpermutecount = num; }
+		bool useRandom;
+
+	// remote worker functions
+		const string getnumericdatastring();
+		void setnumericdatastring(const vector<string>&);
+		void learnonlymarkov();
+
+	// distributed support functions
+		void BeginMarkovTransaction() { markov.BeginTransaction(); }
+		void EndMarkovTransaction() { markov.EndTransaction(); }
+		void BeginDictionaryTransaction() { dictionary.BeginTransaction(); }
+		void EndDictionaryTransaction() { dictionary.EndTransaction(); }
+
+		void InjectWord(unsigned w, unsigned val) { 
+			dictionary.AddWord(w, val, false);
+		}
+		void InjectMarkov(const string& s)
+		{
+			markov.AddRow(s);
+		}
+
+	// Bootstraps a clean worker.
+		void BootstrapDB() { dictionary.ClearAll(); markov.ClearAll(); }
+
+	// local master functions
+		void SendLearnKeywords();
+		vector<vector<unsigned> > GetRepliesFromAll();
+
+		void SendAllSlavesAndWait(const string&);
+		void connect_to_workers(string file);
+	
 };
 
 #endif

@@ -26,7 +26,11 @@
 #include <math.h>
 
 #define TRIP_CONTEXT_TIMEOUT 120
-#define TRIP_MAXKEY 6
+//#define TRIP_MAXKEY 6
+
+
+
+template<typename T> T abs(T n) { return n<0?0-n:n; }
 
 using std::vector;
 using std::string;

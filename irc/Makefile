@@ -1,4 +1,5 @@
-CXXFLAGS=-Wall -g -fno-exceptions
+CXXFLAGS=
+ECXX=-Wall
 
 IRC.o: IRC.cc
-	${CXX} ${CXXFLAGS} -c "IRC.cc" -o "IRC.o" -I.
+	${CXX} ${CXXFLAGS} ${ECXX} -c "IRC.cc" -o "IRC.o" -I.
