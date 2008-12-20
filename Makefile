@@ -55,7 +55,7 @@ mainworker.o: mainworker.cc
 
 
 clean:
-	rm *.o ai/*.o irc/*.o protocol/*.o botdata/tdb 2> /dev/null
+	rm *.o ai/*.o irc/*.o protocol/*.o botdata/tdb protocol/*.a 2> /dev/null
 
 strip:
 	strip -s *triplie

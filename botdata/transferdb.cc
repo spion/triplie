@@ -1,8 +1,10 @@
-#include "sqlite_class.h"
+#include "../ai/sqlite_class.h"
 
 #include <fstream>
+#include <iostream>
 
 using std::ifstream;
+using std::cout; using std::endl;
 
 template <typename From, typename To> To convert(From f) { To t; stringstream s; s << f; s >> t; return t; } 
 
