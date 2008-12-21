@@ -16,21 +16,11 @@ using std::string;
 #define MARKOV_MAXORDER 6
 #define TRIP_AI_MAXPERMUTATIONS 160
 
-template<unsigned N> struct newmarkov
-{ 
-    typedef map<unsigned, typename newmarkov<N-1>::model> model; 
-}; 
-template<> struct newmarkov<0> 
-{ 
-    typedef unsigned model; 
-};
-
-
 class CMarkov
 {
 	private:
-		SQLite db;
-		newmarkov<MARKOV_MAXORDER>::model mdata;
+		SQLite* db;
+		bool InsideTransaction;
 		unsigned order; 			//order of model
 		unsigned internalCount;
 		bool CheckIfLinked(vector<unsigned>& words);
@@ -40,10 +30,10 @@ class CMarkov
 								unsigned end, unsigned method=2);
 		void all(vector<vector<unsigned> >& permutations, const unsigned& method);
 	public:
-		CMarkov(string dbf);
+		void CMarkovInit(SQLite* dbf);
 		~CMarkov() { }
-		void CloseDB() { db.CloseDB(); }
-		void OpenDB() { db.OpenDB(); }
+		void CloseDB() { db->CloseDB(); }
+		void OpenDB() { db->OpenDB(); }
 		void BeginTransaction();
 		void EndTransaction();
 		void setOrder(unsigned N) { }

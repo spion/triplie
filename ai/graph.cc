@@ -23,15 +23,16 @@
 #include <sstream>
 
 
-CGraph::CGraph(string dbf, string tblname):db(dbf) 
-{ 
-	db.Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
-	db.Query("PRAGMA read_uncommited = True;");
+void CGraph::CGraphInit(SQLite* dbf, string tblname)
+{
+	db = dbf;
 	table_name = tblname;
 	stringstream query;
+	db->Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
+	db->Query("PRAGMA read_uncommited = True;");
 	query << "SELECT count(*) FROM " << table_name << ";";
-	db.Query(query.str());
-	count = convert<unsigned>(db.GetLastResult()[0]); 
+	db->Query(query.str());
+	count = convert<unsigned>(db->GetLastResult()[0]); 
 }
 
 void CGraph::AddLink(unsigned x, unsigned y, unsigned val)
@@ -39,7 +40,7 @@ void CGraph::AddLink(unsigned x, unsigned y, unsigned val)
 	stringstream query;
 	query << "INSERT or IGNORE INTO " << table_name
 		  << " VALUES (" << x << "," << y << "," << val << ");";
-	db.Query(query.str());
+	db->Query(query.str());
 	//forward[x][y] = val;
 	//backward[y][x] = val;
 	count += val;
@@ -50,7 +51,7 @@ void CGraph::DelLink(unsigned x, unsigned y)
 	stringstream query;
 	query << "DELETE FROM " << table_name
 		  << " WHERE id1=" << x << " AND id2=" << y << ";";
-	db.Query(query.str());
+	db->Query(query.str());
 	
 	//forward[x][y] = backward[y][x] = 0;
 }
@@ -60,7 +61,7 @@ void CGraph::IncLink(unsigned x, unsigned y)
 	stringstream query;
 	query << "UPDATE " << table_name << " SET val=val+1 "
 		  << " WHERE id1=" << x << " AND id2=" << y << ";";
-	db.Query(query.str());
+	db->Query(query.str());
 	++count;
 }
 
@@ -70,8 +71,8 @@ unsigned CGraph::CheckLink(unsigned x, unsigned y)
 	stringstream query;
 	query << "SELECT sum(val) FROM " << table_name 
 		  << " WHERE (id1 = " << x << ") AND (id2 = " << y << ");"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);
 	return result;
 }
 
@@ -81,8 +82,8 @@ unsigned CGraph::CountFwdLinks(unsigned x)
 	stringstream query;
 	query << "SELECT count(id2) FROM " << table_name 
 		  << " WHERE (id1 = " << x << ");"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);	
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);	
 	return result;	
 }
 
@@ -92,8 +93,8 @@ unsigned CGraph::CountBckLinks(unsigned x)
 	stringstream query;
 	query << "SELECT count(id1) FROM " << table_name 
 		  << " WHERE (id2 = " << x << ");"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);	
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);	
 	return result;	
 }
 
@@ -105,8 +106,8 @@ unsigned CGraph::CountLinks(unsigned x)
 		  << " WHERE (id2 = " << x << ")) + "
 		  << "(SELECT count(id2) FROM " << table_name 
 		  << " WHERE (id1 = " << x << "));"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);	
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);	
 	return result;	
 }
 
@@ -116,8 +117,8 @@ unsigned CGraph::CountBckLinksStrength(unsigned x)
 	stringstream query;
 	query << "SELECT sum(val) FROM " << table_name 
 		  << " WHERE (id2 = " << x << ");"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);	
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);	
 	return result;	
 }
 
@@ -127,8 +128,8 @@ unsigned CGraph::CountFwdLinksStrength(unsigned x)
 	stringstream query;
 	query << "SELECT sum(val) FROM " << table_name 
 		  << " WHERE (id1 = " << x << ");"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);	
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);	
 	return result;	
 }
 
@@ -140,8 +141,8 @@ unsigned CGraph::CountLinksStrength(unsigned x)
 		  << " WHERE (id2 = " << x << ")) + "
 		  << "(SELECT sum(val) FROM " << table_name 
 		  << " WHERE (id1 = " << x << "));"; 
-	db.Query(query.str());
-	result += convert<unsigned>(db.GetLastResult()[0]);	
+	db->Query(query.str());
+	result += convert<unsigned>(db->GetLastResult()[0]);	
 	return result;
 }
 
@@ -151,12 +152,12 @@ TNodeLinks CGraph::GetFwdLinks(unsigned x)
 	stringstream query;
 	query << "SELECT id2, val FROM " << table_name
 		  << " WHERE (id1 = " << x << ");";
-	db.Query(query.str());
-	vector<string> v = db.GetNextResult();
+	db->Query(query.str());
+	vector<string> v = db->GetNextResult();
 	while (v.size() > 1)
 	{
 		n[convert<unsigned>(v[0])] = convert<unsigned>(v[1]);
-		v = db.GetNextResult();
+		v = db->GetNextResult();
 	}
 	return n;
 }
@@ -167,12 +168,12 @@ TNodeLinks CGraph::GetBckLinks(unsigned x)
 	stringstream query;
 	query << "SELECT id1, val FROM " << table_name
 		  << " WHERE (id2 = " << x << ");";
-	db.Query(query.str());
-	vector<string> v = db.GetNextResult();
+	db->Query(query.str());
+	vector<string> v = db->GetNextResult();
 	while (v.size() > 1)
 	{
 		n[convert<unsigned>(v[0])] = convert<unsigned>(v[1]);
-		v = db.GetNextResult();
+		v = db->GetNextResult();
 	}
 	return n;
 }
@@ -191,12 +192,12 @@ long int CGraph::ReadLinks(const string& sfile)
 
 void CGraph::BeginTransaction()
 {
-	db.Query("BEGIN;");
+	db->BeginTransaction();
 }
 
 
 void CGraph::EndTransaction()
 {
-	db.Query("END;");
+	db->EndTransaction();
 }
 

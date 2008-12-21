@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
 				//cout << ((double(clock()) - clockstart)
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();
-				aireply=tai.getdatastring("(console)");
+				aireply=tai.getdatastring("(console)", time(0));
 				double tsec =(GetTickCount() - clockstart);
 				if (aireply == "") { aireply = "*shrug*"; }
 				cout << "> "
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
 
                 //learn
 				tai.setdatastring(theline);
-				tai.learndatastring("(other)", "(console)");
+				tai.learndatastring("(other)", "(console)", time(0));
 				 // end of learn
 
             } // end of chat

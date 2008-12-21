@@ -15,31 +15,18 @@ using std::ofstream;
 using std::stringstream;
 using std::string;
 
-CMarkov::CMarkov(string dbf):db(dbf) {
-	internalCount = 0; 
-	db.Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
-	db.Query("PRAGMA read_uncommited = True;");
+
+void CMarkov::CMarkovInit(SQLite* dbf)
+{
+	internalCount = 0;
+	db = dbf;
+	db->Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
+	db->Query("PRAGMA read_uncommited = True;");
 }
 
 void CMarkov::Reindex(unsigned order)
 {
-	/*
-	for (unsigned i = 1; i < MARKOV_MAXORDER; ++i)
-	{
-		string query = string("DROP INDEX IF EXISTS markov_i_") + convert<string>(i);
-		db.Query(query + ";");
-		query += "_" + convert<string>(i+1);
-		db.Query(query + ";");
-	}
-	for (unsigned i = 1; i < MARKOV_MAXORDER; ++i)
-	{
-		string indname = string("CREATE INDEX markov_i_") + convert<string>(i);
-		string onwhat = string(" ON markov (id") + convert<string>(i);
-		db.Query(indname + onwhat + ");");
-		onwhat += ",id" + convert<string>(i+1);
-		indname += "_" + convert<string>(i+1);
-		db.Query(indname + onwhat + ");");	
-	}*/
+
 }
 
 void CMarkov::remember(vector<unsigned>& sentence)
@@ -61,13 +48,13 @@ void CMarkov::remember(vector<unsigned>& sentence)
 				  << v[i+3] << " AND id5="
 				  << v[i+4] << " AND id6="
 				  << v[i+5] << ";";
-			db.Query(string("UPDATE or IGNORE markov SET val=val+1 ") + query.str());
+			db->Query(string("UPDATE or IGNORE markov SET val=val+1 ") + query.str());
 			stringstream qvi;
 			qvi << " (" 
 				<< v[i  ] << "," << v[i+1] << ","
 				<< v[i+2] << "," << v[i+3] << ","
 				<< v[i+4] << "," << v[i+5] << ", 1);";
-			db.Query(string("INSERT or IGNORE INTO markov VALUES") + qvi.str());
+			db->Query(string("INSERT or IGNORE INTO markov VALUES") + qvi.str());
 			++internalCount;
 		}
 	}
@@ -79,8 +66,8 @@ unsigned CMarkov::LinkStrength(unsigned x, unsigned y, unsigned order)
 	if (order >= MARKOV_MAXORDER) { order = MARKOV_MAXORDER-1; } 
 	query << "SELECT sum(val) FROM markov WHERE id1 = " << x
 		  << "AND id" << 1+order << " = " << y;
-	db.Query(query.str());
-	return convert<unsigned>(db.GetLastResult()[0]);
+	db->Query(query.str());
+	return convert<unsigned>(db->GetLastResult()[0]);
 }
 
 unsigned CMarkov::LinkStrength(unsigned x, bool forward, unsigned order)
@@ -99,8 +86,8 @@ unsigned CMarkov::LinkStrength(unsigned x, bool forward, unsigned order)
 		query << " AND id1 <> 0";
 	}
 	query << ";";
-	db.Query(query.str());
-	return convert<unsigned>(db.GetLastResult()[0]);
+	db->Query(query.str());
+	return convert<unsigned>(db->GetLastResult()[0]);
 }
 
 void CMarkov::savedata(const string& sfile)
@@ -175,9 +162,9 @@ vector<unsigned> CMarkov::partial(const vector<unsigned>& head,
 		querytwo << ";";
 		stringstream queryone;
 		queryone << "SELECT id" << (nSelect + 1) << " FROM markov ";
-		db.Query(queryone.str() + querytwo.str()); //Get all connected nodes.
+		db->Query(queryone.str() + querytwo.str()); //Get all connected nodes.
 		vector<string> v;
-		while (( (v = db.GetNextResult()).size() )) 
+		while (( (v = db->GetNextResult()).size() )) 
 		{
 			unsigned unode = convert<unsigned>(v[0]);
 			if ((blacknodes.find(unode) == blacknodes.end()) // node not black
@@ -255,9 +242,9 @@ vector<unsigned> CMarkov::partialreverse(unsigned head,
 		querytwo << ";";
 		stringstream queryone;
 		queryone << "SELECT id1 FROM markov ";
-		db.Query(queryone.str() + querytwo.str()); //Get all connected nodes.
+		db->Query(queryone.str() + querytwo.str()); //Get all connected nodes.
 		vector<string> v;
-		while (( (v = db.GetNextResult()).size() )) 
+		while (( (v = db->GetNextResult()).size() )) 
 		{
 			unsigned unode = convert<unsigned>(v[0]);
 			if ((blacknodes.find(unode) == blacknodes.end()) // node not black
@@ -411,28 +398,29 @@ void CMarkov::all(vector<vector<unsigned> >& permutations, const unsigned& metho
 }
 
 unsigned CMarkov::count() {
-	db.Query("SELECT COUNT(val) FROM markov;");
-	internalCount = convert<unsigned>(db.GetLastResult()[0]);
+	db->Query("SELECT COUNT(val) FROM markov;");
+	internalCount = convert<unsigned>(db->GetLastResult()[0]);
 	return internalCount; 
 }
 
 void CMarkov::BeginTransaction()
 {
-	db.Query("BEGIN;");
+	db->BeginTransaction();
 }
 
 
 void CMarkov::EndTransaction()
 {
-	db.Query("END;");
+	db->EndTransaction();
 }
+
 void CMarkov::ClearAll()
 {
-	db.Query("DELETE FROM markov;");
+	db->Query("DELETE FROM markov;");
 }
 
 void CMarkov::AddRow(const string& row)
 {
-	db.Query(string("INSERT or REPLACE INTO markov VALUES (") + row + ")");
+	db->Query(string("INSERT or REPLACE INTO markov VALUES (") + row + ")");
 }
 

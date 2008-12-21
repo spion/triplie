@@ -38,16 +38,17 @@ using std::map;
 class CDictionary
 {
 	private:
-		SQLite db;
+		SQLite* db;
 		//map<string, unsigned> dict;
 		//string backdict[TRIP_MAXSIZE];
 		//unsigned counter;
 		//unsigned counters[TRIP_MAXSIZE];
 		unsigned long totaloccurances;
+		bool InsideTransaction;
 	public:
-		CDictionary(string dbf);
-		void CloseDB() { db.CloseDB(); }
-		void OpenDB() { db.OpenDB(); }
+		void CDictionaryInit(SQLite* dbf);
+		void CloseDB() { db->CloseDB(); }
+		void OpenDB() { db->OpenDB(); }
 		void clear() { }
 		const string GetWord(unsigned key); 
 		unsigned GetKey(const string& word);
@@ -61,7 +62,8 @@ class CDictionary
 		unsigned occurances(const string& wrd);
 		unsigned occurances();
 
-		map<unsigned,string> FindSimilarWords(const vector<unsigned>& wordlist);
+		map<unsigned, map<unsigned,string> > 
+			FindSimilarWords(const vector<unsigned>& wordlist);
 
 		void BeginTransaction();
 		void EndTransaction();

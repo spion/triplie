@@ -42,9 +42,11 @@ class AI {
 	private:
 		CDictionary dictionary;
 		CMarkov markov;
+		CGraph vertical;
+		SQLite db;
+		
 		vector<TriplieMasterProto> slaves;
-
-
+		
 		bool Distributed; 
 
 		//Linguistics model.
@@ -67,7 +69,6 @@ class AI {
 
 
 		//Thinking model - Vertical relations (context)
-		CGraph vertical;
 		map<string, CContextQueue> context;
 		map<string, bool> conNicks;
 		unsigned vertCount;
@@ -90,8 +91,11 @@ class AI {
 		unsigned maxpermutecount;
 	public:
 		AI(string dbf);
-		void CloseDB() { markov.CloseDB(); dictionary.CloseDB(); vertical.CloseDB(); }
-		void OpenDB() { markov.OpenDB(); dictionary.OpenDB(); vertical.OpenDB(); }
+		void CloseDB() { db.CloseDB(); }
+		void OpenDB() { db.OpenDB(); }
+		void BeginTransaction() { db.BeginTransaction(); }
+		void EndTransaction() { db.EndTransaction(); }
+		void UnsafeFastMode() { db.Query("PRAGMA journal_mode = OFF"); }
 		unsigned TRIP_MAXKEY;
 		const long int countrels();
 		unsigned countwords();
@@ -102,8 +106,8 @@ class AI {
 		void prune_vertical_nonkeywords();
 
 		void setdatastring(const string& datastring);
-		void learndatastring(const string& bywho, const string& where);
-		const string getdatastring(const string& where);
+		void learndatastring(const string& bywho, const string& where, const time_t& when);
+		const string getdatastring(const string& where, const time_t& when);
 
 		void extractkeywords();
 		void expandkeywords();
@@ -122,6 +126,10 @@ class AI {
 		void EndMarkovTransaction() { markov.EndTransaction(); }
 		void BeginDictionaryTransaction() { dictionary.BeginTransaction(); }
 		void EndDictionaryTransaction() { dictionary.EndTransaction(); }
+		
+		void BeginContextTransaction() { vertical.BeginTransaction(); }
+		void EndContextTransaction() { vertical.EndTransaction(); }
+		
 
 		void InjectWord(unsigned w, unsigned val) { 
 			dictionary.AddWord(w, val, false);
@@ -134,7 +142,7 @@ class AI {
 	// Bootstraps a clean worker.
 		void BootstrapDB() { dictionary.ClearAll(); markov.ClearAll(); }
 
-	// local master functions
+	// local master stub functions
 		void SendLearnKeywords();
 		vector<vector<unsigned> > GetRepliesFromAll();
 

@@ -72,12 +72,13 @@ class CContextQueue
 		//context functions
 	public:
 		vector<unsigned> my_dellayed_context;
+		time_t my_dellayed_context_time;
 		CContextQueue() {
 			conMax=10;
 			conLearn=2;
 			conCount=0;
 		}
 		void setVertical(CGraph * v) { vertical = v; }
-		void push(const string& bywho, vector<unsigned>& keywords);
+		void push(const string& bywho, vector<unsigned>& keywords, const time_t& when);
 		void learn();
 };

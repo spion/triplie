@@ -31,7 +31,10 @@ using std::numeric_limits;
 
 /* Initializations */
 
-AI::AI(string dbf):dictionary(dbf), markov(dbf), vertical(dbf, "assoc") {
+AI::AI(string dbf): db(dbf) {
+	markov.CMarkovInit(&db);
+	vertical.CGraphInit(&db, "assoc");
+	dictionary.CDictionaryInit(&db);
 	useRandom = true;
 	Distributed = false;
 	keywords.clear();
@@ -158,13 +161,13 @@ void AI::savealldata(const string& datafolder) {
 }
 
 
-void AI::learndatastring(const string& bywho, const string& where) {
+void AI::learndatastring(const string& bywho, const string& where, const time_t& when) {
 	markov.BeginTransaction();
 	markov.remember(keywords);
 	markov.EndTransaction();
 	context[where].setVertical(&vertical);
 	extractkeywords(); // this might cause bugs.
-	context[where].push(bywho, keywords);
+	context[where].push(bywho, keywords, when);
 	if (Distributed)
 	{
 		SendLearnKeywords();
@@ -180,16 +183,23 @@ void AI::expandkeywords()
 	vector<unsigned>::iterator keywrd;
 	vector<CMContext> results;
 	vector<CMContext>::iterator rit;
-	//cout << "Levenstein expanding..." << endl;
-	map<unsigned, string> expansionmap
-		= dictionary.FindSimilarWords(keywords);
-
-	for (map<unsigned,string>::iterator x = expansionmap.begin();
-		 x != expansionmap.end(); ++x)
-	{
-		keywords.push_back(x->first);
-	}
+	map<unsigned, double> modifiers;
 	
+	//cout << "Levenstein expanding..." << endl;
+	map<unsigned, map<unsigned, string> > expansionmap
+		= dictionary.FindSimilarWords(keywords);
+	for (map<unsigned, map<unsigned, string> >::iterator similars =
+		expansionmap.begin(); similars != expansionmap.end(); ++similars)
+	{
+		for (map<unsigned,string>::iterator x = 
+			 	similars->second.begin();
+				 x != similars->second.end(); ++x)
+		{
+			modifiers[x->first] += similars->second.size();
+			keywords.push_back(x->first);
+		}
+		modifiers[similars->first] = similars->second.size();
+	}
 	for (keywrd = keywords.begin(); keywrd != keywords.end(); ++keywrd)
 	{
 		TNodeLinks req_keywrd;
@@ -203,14 +213,13 @@ void AI::expandkeywords()
 			{
 				if (scorekeyword(reply_keywrd->first) > 0.0)
 				{
-				  kcontext[reply_keywrd->first] += 
+				 	kcontext[reply_keywrd->first] += 
 					1.0 * reply_keywrd->second / req_keywrd_occurances
-						/ req_keywrd.size();
+						/ req_keywrd.size() / (1.0 + modifiers[*keywrd]);
 				}
 			}
 		}
 	}
-
 	CMContext element;
 	for (z = kcontext.begin(); z != kcontext.end(); ++z)
 	{
@@ -281,7 +290,7 @@ void AI::setnumericdatastring(const vector<string>& numeric)
 	}
 }
 
-const string AI::getdatastring(const string& where) {
+const string AI::getdatastring(const string& where, const time_t& when) {
 	string theline="";
 	unsigned int i;
 	if (keywords.size())
@@ -299,6 +308,7 @@ const string AI::getdatastring(const string& where) {
 	extractkeywords(); //this might cause bugs
 	//if (where != "")
 	context[where].my_dellayed_context = keywords;
+	context[where].my_dellayed_context_time = when;
 	return theline;
 }
 
@@ -351,7 +361,9 @@ const float AI::scorekeywords() {
 				curscore -= MINIMUM_INFO_BITS; // repetition penalty
 			}
 		}
-		else { curscore -= 4.0 * MINIMUM_INFO_BITS; } 
+		else { 
+			curscore += 4.0 * log(1.0 / dictionary.occurances()) / log(2.0); 
+		} 
 		// disjoint parts penalty.
 	}
 	return curscore / (keywords.size()+1.0);

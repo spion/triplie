@@ -31,7 +31,7 @@ class SQLite
 	const char *zTail;
 	string m_Query;
 	bool isDone; // basically, ready for query
-	
+	bool InsideTransaction;
 	string dbf;
 	
 	int colCount;
@@ -100,6 +100,7 @@ class SQLite
 	SQLite(string sqdb)
 	{
 		OpenDB(sqdb);
+		InsideTransaction = false;
 	}
 
 	~SQLite()
@@ -152,6 +153,20 @@ class SQLite
 		return rrow;
 	}
 	vector<string> GetLastResult() { return row; }
+	void BeginTransaction() { 
+		if (!InsideTransaction)
+		{
+			Query("BEGIN;"); 
+			InsideTransaction = true;
+		}
+	}
+	void EndTransaction() {
+		if (InsideTransaction)
+		{
+			Query("END;");
+			InsideTransaction = false;
+		}
+	}
 };
 
 #endif

@@ -69,10 +69,11 @@ double leven(string s, string t)
 }
 
 
-CDictionary::CDictionary(string dbf):db(dbf) 
+void CDictionary::CDictionaryInit(SQLite* dbf) 
 { 
-	db.Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
-	db.Query("PRAGMA read_uncommited = True;");
+	db = dbf; 
+	db->Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
+	db->Query("PRAGMA read_uncommited = True;");
 	totaloccurances = 0; 
 	occurances(); 
 }
@@ -91,23 +92,23 @@ const string escapestring(const string& s)
 }
 
 unsigned CDictionary::GetKey(const string& word) {
-	db.Query(string("SELECT id FROM dict WHERE word='") + escapestring(word) + "'");
-	vector<string> v = db.GetNextResult();
+	db->Query(string("SELECT id FROM dict WHERE word='") + escapestring(word) + "'");
+	vector<string> v = db->GetNextResult();
 	if (v.size() > 0) { return convert<int>(v[0]); }
 	else { return 0; }
 }
 
 void CDictionary::AddWord(const string& word, const unsigned& howmany) { 
-	db.Query(string("SELECT id FROM dict WHERE word='") 
+	db->Query(string("SELECT id FROM dict WHERE word='") 
 			+ escapestring(word) + "';");
-	vector<string> v = db.GetNextResult();
+	vector<string> v = db->GetNextResult();
 	if (v.size() < 1) {
-		db.Query(string("INSERT INTO dict (word, wcount) VALUES ('")
+		db->Query(string("INSERT INTO dict (word, wcount) VALUES ('")
 						+ escapestring(word) + "', 1);"); 
 	}
 	else
 	{
-		db.Query(string("UPDATE dict SET wcount = wcount + ") 
+		db->Query(string("UPDATE dict SET wcount = wcount + ") 
 				 + convert<string>(howmany) + " WHERE id = " + v[0] + ";");
 	}
 	totaloccurances += howmany;
@@ -119,85 +120,87 @@ void CDictionary::AddWord(const unsigned& word, const unsigned& howmany, bool no
 	string widstr = convert<string>(word); 
 	if (noInject)
 	{
-		db.Query(string("SELECT id FROM dict WHERE id='") 
+		db->Query(string("SELECT id FROM dict WHERE id='") 
 				+ widstr + "';");
-		vector<string> v = db.GetNextResult();
+		vector<string> v = db->GetNextResult();
 		if (v.size() < 1) {
-			db.Query(string("INSERT INTO dict (id, word, wcount) VALUES (") +
+			db->Query(string("INSERT INTO dict (id, word, wcount) VALUES (") +
 							widstr + ", '', 1);"); 
 		}
 		else
 		{
-			db.Query(string("UPDATE dict SET wcount = wcount + ") 
+			db->Query(string("UPDATE dict SET wcount = wcount + ") 
 				 + convert<string>(howmany) + " WHERE id = " + widstr + ";");
 		}
 		totaloccurances += howmany;
 	}
 	else 
 	{
-		db.Query(string("INSERT or REPLACE INTO dict (id, word, wcount) VALUES (")
+		db->Query(string("INSERT or REPLACE INTO dict (id, word, wcount) VALUES (")
 				 + widstr + ", '', " + convert<string>(howmany) + ");"); 
 	}
 }
 
 
 unsigned CDictionary::count() {
-	db.Query("SELECT count(id) FROM dict;");
-	vector<string> v = db.GetNextResult();
+	db->Query("SELECT count(id) FROM dict;");
+	vector<string> v = db->GetNextResult();
 	return convert<unsigned>(v[0]); 
 }
 
 unsigned CDictionary::occurances(unsigned wrd) { 
-	db.Query(string("SELECT wcount FROM dict WHERE id=") 
+	db->Query(string("SELECT wcount FROM dict WHERE id=") 
 			 + convert<string>(wrd) + ";");
-	if (db.GetLastResult().size() > 0)
-		return convert<unsigned>(db.GetLastResult()[0]);
+	if (db->GetLastResult().size() > 0)
+		return convert<unsigned>(db->GetLastResult()[0]);
 	else return 0;
 }
 
 unsigned CDictionary::occurances(const string& wrd)
 {
-	db.Query(string("SELECT wcount FROM dict WHERE word='") 
+	db->Query(string("SELECT wcount FROM dict WHERE word='") 
 			 + escapestring(wrd) + "';");
-	if (db.GetLastResult().size() > 0)
-		return convert<unsigned>(db.GetLastResult()[0]);
+	if (db->GetLastResult().size() > 0)
+		return convert<unsigned>(db->GetLastResult()[0]);
 	else return 0;
 }
 unsigned CDictionary::occurances()
 {
 	if (totaloccurances == 0) {
-		db.Query("SELECT SUM(wcount) FROM dict;");
-		totaloccurances = convert<unsigned>(db.GetLastResult()[0]);
+		db->Query("SELECT SUM(wcount) FROM dict;");
+		totaloccurances = convert<unsigned>(db->GetLastResult()[0]);
 	}
 	return totaloccurances;
 }
 
 
 unsigned int CDictionary::readwords(string wordsfile = "") {
-	db.Query("SELECT COUNT(id) FROM dict;");
-	return convert<unsigned>(db.GetLastResult()[0]);
+	db->Query("SELECT COUNT(id) FROM dict;");
+	return convert<unsigned>(db->GetLastResult()[0]);
 }
 
 void CDictionary::savewords(string wordsfile = "") {
 }
 
 const string CDictionary::GetWord(unsigned key) {
-	db.Query(string("SELECT word FROM dict WHERE id = ") 
+	db->Query(string("SELECT word FROM dict WHERE id = ") 
 			 + convert<string>(key) + ";");
-	if (db.GetLastResult().size() > 0) 
-			return db.GetLastResult()[0];
+	if (db->GetLastResult().size() > 0) 
+			return db->GetLastResult()[0];
 	else { return ""; }
 }
 
 
-map<unsigned,string> CDictionary::FindSimilarWords(const vector<unsigned>& wordlist)
+map<unsigned, map<unsigned,string> > CDictionary::FindSimilarWords(const vector<unsigned>& wordlist)
 {
-	db.Query("SELECT id,word FROM dict;");
+	db->Query("SELECT id,word FROM dict;");
 	vector<string> v;
 	vector<string> w_strings;
 	map<unsigned, string> full_list;
+	map<string, unsigned> w_list;
+	map<unsigned, map<unsigned, string> > groups;
 	//pass one, divide the words between in-the-list and not-in-the-list
-	while (( (v = db.GetNextResult()).size() > 1 ))
+	while (( (v = db->GetNextResult()).size() > 1 ))
 	{
 		unsigned index = convert<unsigned>(v[0]);
 		bool alreadylisted = false;
@@ -206,7 +209,10 @@ map<unsigned,string> CDictionary::FindSimilarWords(const vector<unsigned>& wordl
 			if (wordlist[i] == index)
 			{
 				if (v[1].size() > 3)
+				{
 					w_strings.push_back(v[1]);
+					w_list[v[1]] = index;
+				}
 				alreadylisted = true;
 				break;
 			}
@@ -222,9 +228,10 @@ map<unsigned,string> CDictionary::FindSimilarWords(const vector<unsigned>& wordl
 		bool close_enough = false;
 		for (unsigned i=0; i < w_strings.size(); ++i)
 		{
-			if (leven(it->second,w_strings[i]) < LEVEN_MAGIC_LIMIT)
+			if ((leven(it->second,w_strings[i]) < LEVEN_MAGIC_LIMIT))
 			{
 				close_enough = true;
+				groups[w_list[w_strings[i]]][it->first] = it->second;
 				break;
 			}
 		}
@@ -234,20 +241,20 @@ map<unsigned,string> CDictionary::FindSimilarWords(const vector<unsigned>& wordl
 		}
 		else { ++it; }
 	}
-	return full_list;
+	return groups;
 }
 
 void CDictionary::BeginTransaction()
 {
-	db.Query("BEGIN;");
+	db->BeginTransaction();
 }
 
 
 void CDictionary::EndTransaction()
 {
-	db.Query("END;");
+	db->EndTransaction();
 }
 
-void CDictionary::ClearAll() { db.Query("DELETE FROM dict;"); }
+void CDictionary::ClearAll() { db->Query("DELETE FROM dict;"); }
 
 

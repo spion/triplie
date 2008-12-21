@@ -354,7 +354,7 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 					tai.extractkeywords();
 					tai.connectkeywords(aimodel);
 					string res = string("Result: ") 
-							   + tai.getdatastring("(null)");
+							   + tai.getdatastring("(null)", rand());
 					irc_conn->privmsg(wheretosend.c_str(), 
 							res.c_str());
 					}
@@ -402,11 +402,11 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				tai.connectkeywords(aimodel);
 				if (msgtarget[0] == '#')
 				{
-					rawcmd = tai.getdatastring(msgtarget);
+					rawcmd = tai.getdatastring(msgtarget, time(0));
 				}
 				else
 				{
-					rawcmd = tai.getdatastring(rnick);
+					rawcmd = tai.getdatastring(rnick, time(0));
 				}
 				
 				if (sleepmax)
@@ -441,11 +441,11 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 			tai.setdatastring(rawcmd);
 			if (msgtarget[0] == '#')
 			{
-				tai.learndatastring(hostd->nick, msgtarget);
+				tai.learndatastring(hostd->nick, msgtarget, time(0));
 			}
 			else
 			{
-				tai.learndatastring(hostd->nick, rnick);
+				tai.learndatastring(hostd->nick, rnick, time(0));
 			}
 		} // end of normal text
     }

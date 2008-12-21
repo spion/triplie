@@ -8,8 +8,9 @@ IEXTRAS=-I. -I./ai -I./IRC -I./protocol
 .PHONY: ai irc protocol botdata strip
 
 
-all: triplie cmdtriplie feedtriplie worktriplie botdata
+all: triplie cmdtriplie worktriplie botdata
 
+complete: triplie cmdtriplie worktriplie feedtriplie botdata strip
 
 ai: 
 	make -C ai
@@ -33,7 +34,7 @@ cmdtriplie: maincmdline.o ai protocol
 	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o cmdtriplie maincmdline.o ai/ai.o ai/tokens.o ai/dictionary.o ai/newmarkov.o ai/graph.o ai/context.o protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
 
 feedtriplie: mainfeed.o ai protocol
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o feedtriplie mainfeed.o ai/ai.o ai/tokens.o ai/dictionary.o ai/newmarkov.o ai/graph.o ai/context.o protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -lboost_regex -o feedtriplie mainfeed.o ai/ai.o ai/tokens.o ai/dictionary.o ai/newmarkov.o ai/graph.o ai/context.o protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
 
 worktriplie: mainworker.o ai protocol
 	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o worktriplie mainworker.o protocol/triproto-lib.a ai/ai.o ai/tokens.o ai/dictionary.o ai/newmarkov.o ai/graph.o ai/context.o protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}

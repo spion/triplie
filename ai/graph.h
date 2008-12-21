@@ -39,13 +39,14 @@ class CGraph
 {
 	private:
 		string table_name;
-		SQLite db;
+		SQLite* db;
+		bool InsideTransaction;
 	public:
-		void CloseDB() { db.CloseDB(); }
-		void OpenDB() { db.OpenDB(); }
+		void CloseDB() { db->CloseDB(); }
+		void OpenDB() { db->OpenDB(); }
 		unsigned long count;
 	
-		CGraph(string dbf, string tblname); 
+		void CGraphInit(SQLite* dbf, string tblname);
 		void AddLink(unsigned x, unsigned y, unsigned val);
 		void IncLink(unsigned x, unsigned y);
 		void DelLink(unsigned x, unsigned y);

@@ -22,7 +22,8 @@
 #include "context.h"
 
 
-void CContextQueue::push(const string& bywho, vector<unsigned>& keywords)
+void CContextQueue::push(const string& bywho, vector<unsigned>& keywords, 
+						 const time_t& when)
 {
 	deque<CContext>::iterator qit;
 	
@@ -35,7 +36,7 @@ void CContextQueue::push(const string& bywho, vector<unsigned>& keywords)
 	CContext element;
 	element.nick = bywho;
 	element.keywords = keywords;
-	element.addtime = time(0);
+	element.addtime = when;
 
 	context.push_back(element);
 	conNicks[bywho] = true;
@@ -54,7 +55,7 @@ void CContextQueue::push(const string& bywho, vector<unsigned>& keywords)
 	{
 		vector<unsigned> mykeys = my_dellayed_context;
 		my_dellayed_context.clear();
-		push("(me)",mykeys); 
+		push("(me)",mykeys, my_dellayed_context_time); 
 	}
 }
 
