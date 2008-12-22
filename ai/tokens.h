@@ -62,6 +62,7 @@ long int numtok(const std::string& str,
 long int findtok(const std::string& str, const std::string& token,
               const std::string& delimiters = " ");
 
-string subtokstring(const vector<string>& tokens,unsigned int n1, unsigned int n2, const string& c);
+string subtokstring(const vector<string>& tokens,unsigned int n1, 
+					unsigned int n2, const string& c);
 
 #endif /* _TOKENS_H */

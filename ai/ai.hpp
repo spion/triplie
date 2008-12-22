@@ -95,7 +95,7 @@ class AI {
 		void OpenDB() { db.OpenDB(); }
 		void BeginTransaction() { db.BeginTransaction(); }
 		void EndTransaction() { db.EndTransaction(); }
-		void UnsafeFastMode() { db.Query("PRAGMA journal_mode = OFF"); }
+		void UnsafeFastMode() { db.Query("PRAGMA journal_mode = MEMORY"); }
 		unsigned TRIP_MAXKEY;
 		const long int countrels();
 		unsigned countwords();
