@@ -32,6 +32,8 @@ using std::numeric_limits;
 /* Initializations */
 
 AI::AI(string dbf): db(dbf) {
+	db.Query("PRAGMA cache_size = 50000; PRAGMA temp_store = MEMORY;");
+	db.Query("PRAGMA read_uncommited = True;");
 	markov.CMarkovInit(&db);
 	vertical.CGraphInit(&db, "assoc");
 	dictionary.CDictionaryInit(&db);
@@ -155,19 +157,31 @@ void AI::readalldata(const string& datafolder) {
 
 //REFACTOR: will continue to reside in AI
 void AI::savealldata(const string& datafolder) {
-	dictionary.savewords(datafolder+"/words.dat");
-	markov.savedata(datafolder+"/rels");
-	vertical.SaveLinks(datafolder + "/relsv.dat");
+
 }
 
 
 void AI::learndatastring(const string& bywho, const string& where, const time_t& when) {
+	context[where].setVertical(&vertical, &dictionary);
+	vector<unsigned> markov_words;
+	if  (   (keywords.size() > 1) 
+		 && (context[where].isNick(dictionary.GetWord(keywords[0]))) 
+		)
+	{
+		markov_words.insert(markov_words.begin(), keywords.begin() + 1, keywords.end());
+	}
+	else
+	{
+		markov_words = keywords;
+	}
 	markov.BeginTransaction();
-	markov.remember(keywords);
+	markov.remember(markov_words);
 	markov.EndTransaction();
-	context[where].setVertical(&vertical);
+	//cout << "Okay okay" << endl;
 	extractkeywords(); // this might cause bugs.
+	//cout << "->OK0.1" << endl;
 	context[where].push(bywho, keywords, when);
+	//cout << "OkayXokay" << endl;
 	if (Distributed)
 	{
 		SendLearnKeywords();
@@ -260,8 +274,7 @@ void AI::setdatastring(const string& datastring) {
 			case '?':
 			case ':':
 			case '(':
-			case ')':
-			case '-': theline.insert(x," "); ++x; theline.insert(x+1," "); ++x; 
+			case ')': theline.insert(x," "); ++x; theline.insert(x+1," "); ++x; 
 					  break;
 			default : theline[x]=tolower(theline[x]);
 		}

@@ -28,8 +28,6 @@ void CGraph::CGraphInit(SQLite* dbf, string tblname)
 	db = dbf;
 	table_name = tblname;
 	stringstream query;
-	db->Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
-	db->Query("PRAGMA read_uncommited = True;");
 	query << "SELECT count(*) FROM " << table_name << ";";
 	db->Query(query.str());
 	count = convert<unsigned>(db->GetLastResult()[0]); 
@@ -56,13 +54,13 @@ void CGraph::DelLink(unsigned x, unsigned y)
 	//forward[x][y] = backward[y][x] = 0;
 }
 
-void CGraph::IncLink(unsigned x, unsigned y)
+void CGraph::IncLink(unsigned x, unsigned y, unsigned val)
 {
 	stringstream query;
-	query << "UPDATE " << table_name << " SET val=val+1 "
+	query << "UPDATE " << table_name << " SET val=val+" << val
 		  << " WHERE id1=" << x << " AND id2=" << y << ";";
 	db->Query(query.str());
-	++count;
+	count += val;
 }
 
 unsigned CGraph::CheckLink(unsigned x, unsigned y)

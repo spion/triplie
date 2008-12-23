@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
 	cout << "Triple AI bot started" << endl
 	     << "Eating data from stdin..." << endl;
 	unsigned long i = 0;
+	unsigned long ii = 0;
 	string mstr;
 	for (int k = 1; k < argc; ++k) {
 		mstr += argv[k];
@@ -107,20 +108,26 @@ int main(int argc, char** argv) {
 						happen_time_sec += in_seconds;
 					}
 				}
-				/*
+#ifdef _FEED_DEBUG
 				cout << happen_time_sec << "::"
 					 << happen_where << "::"
 					 << happen_who << ":::"
 					 << happen_theline << endl;
-				*/
+#endif
    				tai.setdatastring(happen_theline);
 				tai.learndatastring(happen_who, happen_where, happen_time_sec);
 			}
+
 		}
 		i = ((i+1) % 100);
 		if (i == 0) {
+#ifndef _FEED_DEBUG
 			cout << "+";
 			cout.flush();
+#endif
+			++ii;
+			if (ii > 50) { ii = 0; cout << " +5K" << endl; }
+			tai.UnsafeQuery("VACUUM; ANALYZE;");
 		}
 	}
 	cout << endl << "Done eating." << endl;

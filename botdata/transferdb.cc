@@ -8,13 +8,13 @@ using std::cout; using std::endl;
 
 template <typename From, typename To> To convert(From f) { To t; stringstream s; s << f; s >> t; return t; } 
 
-int main()
+int main(int argc, char** argv)
 {
 	SQLite db("triplie.db");
 	db.QueryExec("CREATE TABLE if not exists markov (id1, id2, id3, id4, id5, id6, val, PRIMARY KEY (id1,id2,id3,id4,id5,id6));");
 	db.QueryExec("CREATE TABLE if not exists dict (id INTEGER PRIMARY KEY, word, wcount);");
 	db.QueryExec("CREATE TABLE if not exists assoc (id1, id2, val, PRIMARY KEY (id1, id2));");
-	db.QueryExec("DELETE FROM markov; DELETE FROM dict; DELETE FROM assoc; VACUUM;");
+	//db.QueryExec("DELETE FROM markov; DELETE FROM dict; DELETE FROM assoc; VACUUM;");
 	int k = 0;
 	
 	
@@ -82,6 +82,8 @@ int main()
 	db.QueryExec("END;");	
 	cout << "Creating word index...." << endl;
 	db.QueryExec("CREATE INDEX IF NOT EXISTS wordindex ON dict (word);");
+	if (argc < 2)
+	{
 	cout << "Creating assoc one index...." << endl;
 	db.QueryExec("CREATE INDEX if not exists associndex_one ON assoc(id1);");
 	cout << "Creating assoc two index...." << endl;
@@ -93,6 +95,7 @@ int main()
 	create index if not exists markov_i_1_2 on markov(id1,id2); \
 	create index if not exists markov_i_2_3 on markov(id2,id3); \
 	");
+	}
 	cout << "All done!" << endl;
 	return 0;
 }

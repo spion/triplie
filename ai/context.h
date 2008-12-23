@@ -23,9 +23,10 @@
 #include <vector>
 #include <deque>
 #include "graph.h"
+#include "dictionary.h"
 #include <math.h>
 
-#define TRIP_CONTEXT_TIMEOUT 120
+#define TRIP_CONTEXT_TIMEOUT 600 // 10 minutes.
 //#define TRIP_MAXKEY 6
 
 
@@ -64,21 +65,23 @@ class CContextQueue
 {
 	private:
 		deque<CContext> context;
-		map<string, bool> conNicks;
+		map<unsigned, map<unsigned, unsigned> > conLinks;
+		map<string, bool> areNicks;
 		unsigned conMax;
-		unsigned conLearn;
 		unsigned conCount;
 		CGraph * vertical;
+		CDictionary * dictionary;
 		//context functions
+		void relink();
 	public:
 		vector<unsigned> my_dellayed_context;
 		time_t my_dellayed_context_time;
 		CContextQueue() {
-			conMax=10;
-			conLearn=2;
+			conMax=6;
 			conCount=0;
 		}
-		void setVertical(CGraph * v) { vertical = v; }
+		bool isNick(const string& n);
+		void setVertical(CGraph * v, CDictionary * d) { vertical = v; dictionary = d;  }
 		void push(const string& bywho, vector<unsigned>& keywords, const time_t& when);
 		void learn();
 };

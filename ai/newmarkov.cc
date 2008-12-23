@@ -38,8 +38,6 @@ void CMarkov::CMarkovInit(SQLite* dbf)
 {
 	internalCount = 0;
 	db = dbf;
-	db->Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
-	db->Query("PRAGMA read_uncommited = True;");
 }
 
 void CMarkov::Reindex(unsigned order)

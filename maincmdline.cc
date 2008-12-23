@@ -156,7 +156,6 @@ int main(int argc, char** argv) {
             } // end of chat
         } // end of non-empty imput
 	}
-	tai.savealldata("botdata");
 	cout << endl << "Bye bye." << endl;
     return 0;
 }

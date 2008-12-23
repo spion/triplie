@@ -115,7 +115,10 @@ class SQLite
 	void CloseDB()
 	{
 		cleanUp();
-		sqlite3_close(db);
+		if (db)
+		{
+			sqlite3_close(db);
+		}
 	}
 
 	long int GetCounter() { return counter; }

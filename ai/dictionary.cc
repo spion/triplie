@@ -72,8 +72,6 @@ double leven(string s, string t)
 void CDictionary::CDictionaryInit(SQLite* dbf) 
 { 
 	db = dbf; 
-	db->Query("PRAGMA cache_size = 25000; PRAGMA temp_store = MEMORY;");
-	db->Query("PRAGMA read_uncommited = True;");
 	totaloccurances = 0; 
 	occurances(); 
 }
@@ -184,9 +182,11 @@ void CDictionary::savewords(string wordsfile = "") {
 
 const string CDictionary::GetWord(unsigned key) {
 	db->Query(string("SELECT word FROM dict WHERE id = ") 
-			 + convert<string>(key) + ";");
-	if (db->GetLastResult().size() > 0) 
-			return db->GetLastResult()[0];
+		 + convert<string>(key) + ";");
+	if (db->GetLastResult().size() > 0)
+	{
+		return db->GetLastResult()[0];
+	}
 	else { return ""; }
 }
 

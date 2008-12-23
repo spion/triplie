@@ -48,7 +48,7 @@ class CGraph
 	
 		void CGraphInit(SQLite* dbf, string tblname);
 		void AddLink(unsigned x, unsigned y, unsigned val);
-		void IncLink(unsigned x, unsigned y);
+		void IncLink(unsigned x, unsigned y, unsigned val = 1);
 		void DelLink(unsigned x, unsigned y);
 		unsigned CheckLink(unsigned x, unsigned y);
 	

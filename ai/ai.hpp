@@ -34,7 +34,6 @@
 
 #define TRIP_MAXKEY_DEFAULT 8
 
-#define TRIP_CONTEXT_TIMEOUT 120
 
 using namespace std;
 
@@ -51,18 +50,11 @@ class AI {
 
 		//Linguistics model.
 
-		//Moves to CMarkovLang, goes array. It might move to the
-		//more-basic class from which CMarkovLang is derived, CBiGraph.
-		//Basically, CBiGraph will be a simple non-array algorithmless version
-		//of CMarkovLang i.e. a basic data-interface, like CDictionary.
-
-		//Moves to CMarkovLang, goes array.
 		unsigned long int relcount;
 
 		vector<unsigned> keywords;
 		vector<unsigned> my_dellayed_context;
 		
-		//Goes into CAIPermutator, will be retrieved from there.
 		vector<vector<unsigned> > shuffles;
 
 		list<float> scores;
@@ -96,6 +88,7 @@ class AI {
 		void BeginTransaction() { db.BeginTransaction(); }
 		void EndTransaction() { db.EndTransaction(); }
 		void UnsafeFastMode() { db.Query("PRAGMA journal_mode = MEMORY"); }
+		void UnsafeQuery(const string& s) { db.Query(s); }
 		unsigned TRIP_MAXKEY;
 		const long int countrels();
 		unsigned countwords();
