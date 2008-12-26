@@ -88,6 +88,8 @@ void CContextQueue::learn()
 	
 	if (last.nick == string("(me)")) return; // don't enforce my connections.
 	
+	map<std::pair<unsigned, unsigned>, bool> IncrementApplied;
+	
 	vertical->BeginTransaction();
 	
 	for (qit = 0; qit < context.size() - 1; ++qit)
@@ -106,10 +108,16 @@ void CContextQueue::learn()
 				for (jt = last.keywords.begin(); 
 					 jt != last.keywords.end(); ++jt)
 				{
+					
 					if (*it != *jt)
 					{
-						vertical->AddLink(*it,*jt,0);
-						vertical->IncLink(*it,*jt,connectedness);
+						std::pair<unsigned, unsigned> p(*it,*jt);
+						if (IncrementApplied.find(p) == IncrementApplied.end())
+						{
+							vertical->AddLink(*it,*jt,0);
+							vertical->IncLink(*it,*jt,connectedness);
+							IncrementApplied[p] = true;
+						}
 					}
 				} // for all keys in last.
 			} // for all keys in first
@@ -148,6 +156,7 @@ void CContextQueue::relink()
 			if (qit == context.size() - 2)
 			{
 				unsigned recheck = 0;
+				// or = (conLinks[qit][context.size() - 1] += 1) maybe
 				for (unsigned witx = 0; witx < current.keywords.size(); ++witx)
 				{	
 					string wx = dictionary->GetWord(current.keywords[witx]);

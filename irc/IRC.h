@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#define __CPIRC_VERSION__	0.1
+#define __CPIRC_VERSION__	0.11
 
 #define IRC_USER_VOICE	1
 #define IRC_USER_HALFOP	2

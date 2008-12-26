@@ -228,8 +228,8 @@ void AI::expandkeywords()
 				if (scorekeyword(reply_keywrd->first) > 0.0)
 				{
 				 	kcontext[reply_keywrd->first] += 
-					1.0 * reply_keywrd->second / req_keywrd_occurances
-						/ req_keywrd.size() / (1.0 + modifiers[*keywrd]);
+					1.0 * log(1.0 + reply_keywrd->second / req_keywrd_occurances
+						/ req_keywrd.size() / (1.0 + modifiers[*keywrd]));
 				}
 			}
 		}
