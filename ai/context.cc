@@ -162,7 +162,8 @@ void CContextQueue::relink()
 					string wx = dictionary->GetWord(current.keywords[witx]);
 					// and they are both talking about something with the 
 					// same keyword symbols 
-					if (wx == w) { 
+					if (wx.size() > 4 && w.size() > 4 && 
+						(leven(wx,w) < LEVEN_MAGIC_LIMIT)) { 
 						 recheck = (conLinks[qit][context.size() - 1] += 1); 
 							// add one link per symbol (max 4 to 8)
 						if (recheck > 7) break;

@@ -139,7 +139,7 @@ vector<unsigned> CMarkov::partial(const vector<unsigned>& head,
 		if (i != 1)
 			previousnode[head[i-1]] = head[i-2];
 	}
-	
+	//previousnode.erase(0); // zero has no previous when forward-connecting.
 	bool finished = false;
 	
 	unsigned currentnode = head[head.size() - 1];
@@ -401,6 +401,7 @@ void CMarkov::all(vector<vector<unsigned> >& permutations, const unsigned& metho
 				else
 				{
 					head = partialreverse(head[0],permutation[j],method);
+					//extras.push_back(partial(head,0,method));
 				}
 #ifdef PARTIAL_CACHING
 				if (j < permutation.size() - 2)

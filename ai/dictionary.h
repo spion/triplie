@@ -27,7 +27,7 @@
 #include "sqlite_class.h"
 #define TRIP_MAXSIZE 65500
 
-#define MAX_WSIZE 20
+#define MAX_WSIZE 30
 
 #define LEVEN_MAGIC_LIMIT 0.167
 
@@ -72,7 +72,8 @@ class CDictionary
 		
 };
 
-
+double leven(string s, string t);
+int minimum(int x, int y, int z);
 
 
 

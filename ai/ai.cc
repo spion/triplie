@@ -200,6 +200,7 @@ void AI::expandkeywords()
 	map<unsigned, double> modifiers;
 	
 	//cout << "Levenstein expanding..." << endl;
+	/*
 	map<unsigned, map<unsigned, string> > expansionmap
 		= dictionary.FindSimilarWords(keywords);
 	for (map<unsigned, map<unsigned, string> >::iterator similars =
@@ -209,11 +210,12 @@ void AI::expandkeywords()
 			 	similars->second.begin();
 				 x != similars->second.end(); ++x)
 		{
-			modifiers[x->first] += similars->second.size();
+			modifiers[x->first] = similars->second.size();
 			keywords.push_back(x->first);
 		}
 		modifiers[similars->first] = similars->second.size();
-	}
+	}*/
+	//sort(keywords.begin(), keywords.end());
 	for (keywrd = keywords.begin(); keywrd != keywords.end(); ++keywrd)
 	{
 		TNodeLinks req_keywrd;
@@ -228,8 +230,8 @@ void AI::expandkeywords()
 				if (scorekeyword(reply_keywrd->first) > 0.0)
 				{
 				 	kcontext[reply_keywrd->first] += 
-					log(1.0 + 1.0 * reply_keywrd->second / req_keywrd_occurances
-						/ req_keywrd.size() / (1.0 + modifiers[*keywrd]));
+					log(1.0 + reply_keywrd->second) / req_keywrd_occurances
+						/ req_keywrd.size(); // (1.0 + modifiers[*keywrd]);
 				}
 			}
 		}
@@ -243,7 +245,6 @@ void AI::expandkeywords()
 	}
 	sort(results.begin(), results.end());
 	reverse(results.begin(), results.end());
-	
 	unsigned keycnt = 1;
 	keywords.clear();
 	for (rit = results.begin(); rit != results.end(); ++rit)

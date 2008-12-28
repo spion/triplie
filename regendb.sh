@@ -7,7 +7,9 @@ then
 	rm botdata/triplie.db
 fi
 echo 'Creating database...'
+cd botdata
 make bootstrap
+cd ..
 if [ -f "log.txt" ]
 then
 	echo 'Making sure feedtriplie is upto date...'

@@ -106,6 +106,13 @@ int main(int argc, char** argv) {
 							tai.setpermute(permutesize);
 							cout << "!ai permuting " << permutesize << endl << endl;
 						}
+						if (tokens[1] == "permutations")
+						{
+							unsigned pcount = atol(tokens[2].c_str());
+							if (!pcount) { pcount = TRIP_AI_MAXPERMUTATIONS; }
+							tai.maxpermute(pcount);
+							cout << "Maximum permutations now " << pcount << endl << endl;
+						}
 						if (tokens[1] == "random")
 						{
 							if (tokens[2] == "on") {

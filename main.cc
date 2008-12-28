@@ -141,7 +141,6 @@ int main(int argc, char** argv) {
 	cout << "Entering message loop..." << endl;
 	#endif
 	
-	tai.useRandom = true;
 	tai.connect_to_workers("workers.dat");
 	while (shouldreconnect) {
 		conn.message_loop();

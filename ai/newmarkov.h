@@ -31,7 +31,7 @@ using std::vector;
 using std::string;
 
 #define MARKOV_MAXORDER 6
-#define TRIP_AI_MAXPERMUTATIONS 160
+#define TRIP_AI_MAXPERMUTATIONS 100
 
 class CMarkov
 {
