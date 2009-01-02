@@ -276,12 +276,14 @@ void AI::setdatastring(const string& datastring) {
 			case ':':
 			case '(':
 			case ')': theline.insert(x," "); ++x; theline.insert(x+1," "); ++x; 
-					  break;
-			default : theline[x]=tolower(theline[x]);
+					  break; 
+			default : break;
 		}
 	}
+	lowercase(theline);
+	//theline[x]=to//lower(theline[x]);
 	if (theline!="") {
-		tokenize(theline,strkeywords," \t");
+		tokenize(theline,strkeywords," \t\n");
 	}
 	unsigned long int litmp = strkeywords.size(); unsigned long int i;
 	for (i=0;i<litmp;i++) {

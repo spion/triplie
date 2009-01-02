@@ -59,12 +59,12 @@ double GetTickCount()
  * ************************************* */
 
 int main(int argc, char** argv) {
+	setlocale(LC_ALL, "en_US.utf8");
 	Wildcard wildmatch;
 	string theline, matcher, aireply;
     vector<string> tokens;
 	vector<string> tuplets;
     vector<string> tupletsubtokens;
-    unsigned long int x;
 	unsigned long int llen;
     matcher="!*";
     theline="";
@@ -84,7 +84,8 @@ int main(int argc, char** argv) {
 	tai.connect_to_workers("workers.dat");
 	while (shouldtalk) {
 		getline(cin,theline);
-        for(x=0;x<theline.size();x++) { theline[x]=tolower(theline[x]); }
+		lowercase(theline);
+        //for(x=0;x<theline.size();x++) { theline[x]=to//lower(theline[x]); }
 		tokens.clear();
         tokenize(theline,tokens," ,:"); llen= tokens.size();
         if (llen>0) {

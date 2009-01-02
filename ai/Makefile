@@ -21,7 +21,7 @@ graph.o: graph.cc
 newmarkov.o: newmarkov.cc
 	${CXX} ${CXXFLAGS} ${ECXX} -c "newmarkov.cc" -o "newmarkov.o" -I. ${INCLUDED}
 
-context.o: newcontext.cc
+context.o: context.cc
 	${CXX} ${CXXFLAGS} ${ECXX} -c "context.cc" -o "context.o" -I. ${INCLUDED}
 
 libsqlitefunctions.so: extension-functions.c

@@ -65,4 +65,9 @@ long int findtok(const std::string& str, const std::string& token,
 string subtokstring(const vector<string>& tokens,unsigned int n1, 
 					unsigned int n2, const string& c);
 
+
+
+void lowercase(string& s);
+
+
 #endif /* _TOKENS_H */

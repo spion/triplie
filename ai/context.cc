@@ -24,12 +24,6 @@
 #include "context.h"
 #include <iostream>
 
-void lowercase(string& s)
-{
-	for (unsigned i = 0; i < s.size(); ++i)
-		s[i] = tolower(s[i]);
-}
-
 void CContextQueue::push(const string& bywho, vector<unsigned>& keywords, 
 						 const time_t& when)
 {

@@ -24,6 +24,7 @@
 #include <deque>
 #include "graph.h"
 #include "dictionary.h"
+#include "tokens.h"
 #include <math.h>
 
 #define TRIP_CONTEXT_TIMEOUT 600 // 10 minutes.

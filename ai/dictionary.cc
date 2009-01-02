@@ -86,6 +86,7 @@ const string escapestring(const string& s)
 		posq += 2;
 		posq = wrd.find_first_of("'",posq);
 	}
+	//std::cout << '"' << wrd << "\" (" << wrd.size() << ")" << std::endl;
 	return wrd;
 }
 

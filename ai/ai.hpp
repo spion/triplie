@@ -22,12 +22,8 @@
 #ifndef _AI_H
 #define _AI_H
 
-#include "dictionary.h"
-#include "newmarkov.h"
-#include "graph.h"
 #include "context.h"
-#include "tokens.h"
-
+#include "newmarkov.h"
 #include "../protocol/triprotomaster.h"
 
 #include <deque>

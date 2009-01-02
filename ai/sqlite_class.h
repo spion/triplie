@@ -78,7 +78,7 @@ class SQLite
 			retres = sqlite3_prepare(db, m_Query.c_str(), -1, &ppVm, &zTail);
 			if (ppVm == NULL) 
 			{
-				throw SQLiteException(m_Query + "\n" + sqlite3_errmsg(db));
+				throw SQLiteException(m_Query + " -- At InternalQuery:" + sqlite3_errmsg(db));
 			}
 			colCount = sqlite3_column_count(ppVm);
 			isDone = false;
@@ -98,7 +98,7 @@ class SQLite
 		sqlite3_enable_shared_cache(1);
 		int sqstate = sqlite3_open(dbf.c_str(),  &db);
 		if (sqstate != SQLITE_OK) 
-			throw SQLiteException(sqlite3_errmsg(db));
+			throw SQLiteException(sqlite3_errmsg(db) + string(" (at OpenDB)"));
 		/*
 		sqlite3_enable_load_extension(db,1);
 		if (sqlite3_load_extension(db,"./libsqlitefunctions.so",0,0))
@@ -154,7 +154,7 @@ class SQLite
 			int retres;
 			if (( (retres = sqlite3_step(ppVm)) == SQLITE_BUSY ))
 			{
-				throw SQLiteException(m_Query + "\n" + sqlite3_errmsg(db));
+				throw SQLiteException(m_Query + " -- At GetNextResult(1): " + sqlite3_errmsg(db));
 			}
 			if (retres == SQLITE_ROW) {
 				row.reserve(colCount+1);
@@ -173,7 +173,7 @@ class SQLite
 				else { m_Query = ""; }
 				if (m_Query.find_first_not_of("\r\n\t ") != string::npos) { internalQuery(); }
 			}
-			else { throw SQLiteException(m_Query + "\n" + sqlite3_errmsg(db)); } 
+			else { throw SQLiteException(m_Query + " -- At GetNextResult(2): " + sqlite3_errmsg(db)); } 
 		}
 		return rrow;
 	}

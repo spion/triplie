@@ -93,6 +93,7 @@ void signal_handler(int sig)
 
 
 int main(int argc, char** argv) {
+	setlocale(LC_ALL, "en_US.utf8");
 	defchar="!";
 	sleepmin=0; sleepmax=0;
 	shouldreconnect=true;
@@ -132,7 +133,7 @@ int main(int argc, char** argv) {
 	cout << "Hooking irc commands to functions..." << endl;
 	#endif
 	conn.hook_irc_command((char *)"PRIVMSG", &procprivm);
-	conn.hook_irc_command((char *)"376", &end_of_motd);
+	conn.hook_irc_command((char *)"001", &end_of_motd);
 	#ifdef TRIP_DEBUG
 	cout << "Connecting to the server..." << endl;
 	#endif
@@ -242,8 +243,10 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 	}
 	
 	mynick = irc_conn->current_nick();
+	lowercase(mynick);
 
-	for(x=0;x<msg.size();x++) { msg[x]=tolower(msg[x]); }
+	lowercase(msg);
+	//for(x=0;x<msg.size();x++) { msg[x]=to//lower(msg[x]); }
 
     tokenize(msg,tokens," ,:");
 	isadmin = admin_auth(userhost);
@@ -395,36 +398,32 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				}
 				else { rawcmd = msg; }
 				string oldrawcmd = rawcmd;
-				tai.setdatastring(rawcmd);
-				tai.extractkeywords();
-				tai.expandkeywords();
-				tai.connectkeywords(aimodel);
-				if (msgtarget[0] == '#')
+				if (tokens[0].find_first_of("\001") == string::npos 
+					|| tokens[0] == "\001action")
 				{
-					rawcmd = tai.getdatastring(msgtarget, time(0));
-				}
-				else
-				{
-					rawcmd = tai.getdatastring(rnick, time(0));
-				}
-				
-				if (sleepmax)
-				{
-					sleep(sleepmin + rand()%(sleepmax - sleepmin));
-				}
-				if (rawcmd != "") { 
-					if ((tokens[0] == mynick) && (msgtarget[0] == '#'))
+					tai.setdatastring(rawcmd);
+					tai.extractkeywords();
+					tai.expandkeywords();
+					tai.connectkeywords(aimodel);
+					rawcmd = tai.getdatastring(wheretosend, time(0));			
+					if (sleepmax)
 					{
-						rawcmd = rnick+string(":")+rawcmd; 
-						irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
+						sleep(sleepmin + rand()%(abs(sleepmax - sleepmin) + 1));
 					}
-					else
-					{
-						irc_conn->privmsg(rnick.c_str(), 
-										  rawcmd.substr(1).c_str());
+					if (rawcmd != "") { 
+						if ((tokens[0] == mynick) && (msgtarget[0] == '#'))
+						{
+							rawcmd = rnick+string(":")+rawcmd; 
+							irc_conn->privmsg(msgtarget.c_str(),rawcmd.c_str());
+						}
+						else
+						{
+							irc_conn->privmsg(rnick.c_str(), 
+											  rawcmd.substr(1).c_str());
+						}
 					}
+					rawcmd = oldrawcmd;
 				}
-				rawcmd = oldrawcmd;
 			}
 			else {
 				string::size_type mpos = msg.find_first_not_of(" :", 0); //finds text.
@@ -436,18 +435,15 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 					<< string(hostd->nick) << " : ";
 			logfile << rawcmd << endl;
 			logfile.close();
-			//learn
-			tai.setdatastring(rawcmd);
-			if (msgtarget[0] == '#')
+			//learn, while ignoring CTCPS, but not ignoring actions.
+			if (tokens[0].find_first_of("\001") == string::npos || tokens[0] == "\001action")
 			{
-				tai.learndatastring(hostd->nick, msgtarget, time(0));
-			}
-			else
-			{
-				tai.learndatastring(hostd->nick, rnick, time(0));
-			}
-		} // end of normal text
-    }
+
+				tai.setdatastring(rawcmd);
+				tai.learndatastring(hostd->nick, wheretosend, time(0));
+			} // end of normal text
+		} // end of non-commands
+	} // end of at-least 1-token text.
 	return 0;
 }
 

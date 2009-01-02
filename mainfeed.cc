@@ -44,6 +44,7 @@ AI tai("botdata/triplie.db");
  * ************************************* */
 
 int main(int argc, char** argv) {
+	setlocale(LC_ALL, "en_US.utf8");
 	if (argc < 2) {
 		cerr << "Usage " << argv[0] << " <regular_expression>" << endl;
 		return 1;
@@ -65,7 +66,7 @@ int main(int argc, char** argv) {
 	boost::smatch what;
 	while (cin && !cin.eof()) {
 		getline(cin,theline);
-		for(unsigned x=0;x<theline.size();x++) { theline[x]=tolower(theline[x]); }
+		lowercase(theline);
 		if (boost::regex_match(theline,what,e,boost::match_extra))
 		{
 			if (what.size() > 3)
@@ -114,8 +115,19 @@ int main(int argc, char** argv) {
 					 << happen_who << ":::"
 					 << happen_theline << endl;
 #endif
-   				tai.setdatastring(happen_theline);
-				tai.learndatastring(happen_who, happen_where, happen_time_sec);
+				vector<string> tokens;
+				tokenize(happen_theline,tokens," ,:");
+				if (tokens.size() > 0 && 
+					(tokens[0].find_first_of("\001") == string::npos || tokens[0] == "\001action"))
+				{
+   					tai.setdatastring(happen_theline);
+					tai.learndatastring(happen_who, happen_where, happen_time_sec);
+				}
+				else {
+#ifdef _FEED_DEBUG	
+					cout << "is a CTCP" << endl;
+#endif
+				}
 			}
 
 		}

@@ -26,8 +26,16 @@
 #include <map>
 #include <list>
 #include <math.h>
+#include <stdexcept>
 
 #include "tokens.h"
+#include "ConvertUTF.c"
+
+
+struct UnicodeException : public std::runtime_error
+{
+	UnicodeException(std::string error_message): std::runtime_error(error_message) {}
+};
 
 double uniform_deviate (int seed)
 {
@@ -113,4 +121,130 @@ string subtokstring(const vector<string>& tokens,unsigned int n1, unsigned int n
 	}
 	if (res.size()>1) { res.erase(res.size()-1,1); }
 	return res;
+}
+
+//Locale conversion
+
+
+namespace UtfConverter
+{
+
+    std::wstring FromUtf8(const std::string& utf8string)
+    {
+        size_t widesize = utf8string.length();
+        if (sizeof(wchar_t) == 2)
+        {
+            std::wstring resultstring;
+            resultstring.resize(widesize+1, L'\0');
+            const UTF8* sourcestart = reinterpret_cast<const UTF8*>(utf8string.c_str());
+            const UTF8* sourceend = sourcestart + widesize;
+            UTF16* targetstart = reinterpret_cast<UTF16*>(&resultstring[0]);
+            UTF16* targetend = targetstart + widesize;
+            ConversionResult res = ConvertUTF8toUTF16(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
+            if (res != conversionOK)
+            {
+#ifdef TRIP_DEBUG
+				std:: cout << "Igonoring problem with unicode conversion s2w: "
+					<< utf8string << endl;
+#endif
+                //throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
+            }
+            *targetstart = 0;
+            return resultstring;
+        }
+        else if (sizeof(wchar_t) == 4)
+        {
+            std::wstring resultstring;
+            resultstring.resize(widesize+1, L'\0');
+            const UTF8* sourcestart = reinterpret_cast<const UTF8*>(utf8string.c_str());
+            const UTF8* sourceend = sourcestart + widesize;
+            UTF32* targetstart = reinterpret_cast<UTF32*>(&resultstring[0]);
+            UTF32* targetend = targetstart + widesize;
+            ConversionResult res = ConvertUTF8toUTF32(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
+            if (res != conversionOK)
+            {
+#ifdef TRIP_DEBUG
+				std:: cout << "Igonoring problem with unicode conversion s2w: "
+					<< utf8string << endl;
+#endif
+				throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
+            }
+            *targetstart = 0;
+            return resultstring;
+        }
+        else
+        {
+            throw std::exception();
+        }
+        return L"";
+    }
+
+    std::string ToUtf8(const std::wstring& widestring)
+    {
+        size_t widesize = widestring.length();
+
+        if (sizeof(wchar_t) == 2)
+        {
+            size_t utf8size = 3 * widesize + 1;
+            std::string resultstring;
+            resultstring.resize(utf8size, '\0');
+            const UTF16* sourcestart = reinterpret_cast<const UTF16*>(widestring.c_str());
+            const UTF16* sourceend = sourcestart + widesize;
+            UTF8* targetstart = reinterpret_cast<UTF8*>(&resultstring[0]);
+            UTF8* targetend = targetstart + utf8size;
+            ConversionResult res = ConvertUTF16toUTF8(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
+            if (res != conversionOK)
+            {
+                throw UnicodeException(string("Error converting w2s: ") + resultstring + "\n");
+            }
+            *targetstart = 0;
+            return resultstring;
+        }
+        else if (sizeof(wchar_t) == 4)
+        {
+            size_t utf8size = 4 * widesize + 1;
+            std::string resultstring;
+            resultstring.resize(utf8size, '\0');
+            const UTF32* sourcestart = reinterpret_cast<const UTF32*>(widestring.c_str());
+            const UTF32* sourceend = sourcestart + widesize;
+            UTF8* targetstart = reinterpret_cast<UTF8*>(&resultstring[0]);
+            UTF8* targetend = targetstart + utf8size;
+            ConversionResult res = ConvertUTF32toUTF8(&sourcestart, sourceend, &targetstart, targetend, strictConversion);
+            if (res != conversionOK)
+            {
+                throw UnicodeException(string("Error converting w2s: ") + resultstring + "\n");
+			}
+            *targetstart = 0;
+            return resultstring;
+        }
+        else
+        {
+            throw UnicodeException(string("wchar_t size invalid"));
+        }
+        return "";
+    }
+}
+
+
+void lowercase(string& s)
+{
+	wstring ws;
+	try 
+	{
+		ws = UtfConverter::FromUtf8(s);
+	}
+	catch (UnicodeException e)
+	{
+		//fall-back to regular lowercasing.
+		for (unsigned i = 0; i < s.size(); ++i)
+			s[i] = tolower(s[i]);
+		return;
+		//cout << "error converting to unicode" << endl;
+	}
+	for (unsigned i = 0; i < ws.size(); ++i)
+		ws[i] = towlower(ws[i]);
+	//wcout << ws << endl;
+	s = UtfConverter::ToUtf8(ws);
+	s = s.substr(0,s.find_first_of('\0'));
+	//cout << "lowercase: " << s << endl;
 }
