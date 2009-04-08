@@ -167,7 +167,7 @@ namespace UtfConverter
 				std:: cout << "Igonoring problem with unicode conversion s2w: "
 					<< utf8string << endl;
 #endif
-				throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
+				//throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
             }
             *targetstart = 0;
             return resultstring;
