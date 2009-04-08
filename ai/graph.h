@@ -32,7 +32,7 @@ using std::ofstream;
 using std::string;
 using std::endl;
 
-typedef std::map<unsigned, unsigned > TNodeLinks;
+typedef std::map<unsigned, double > TNodeLinks;
 typedef std::map<unsigned, TNodeLinks > TGraphH;
 
 class CGraph
@@ -47,19 +47,19 @@ class CGraph
 		unsigned long count;
 	
 		void CGraphInit(SQLite* dbf, string tblname);
-		void AddLink(unsigned x, unsigned y, unsigned val);
-		void IncLink(unsigned x, unsigned y, unsigned val = 1);
+		void AddLink(unsigned x, unsigned y, double val = 0.0);
+		void IncLink(unsigned x, unsigned y, double val = 1.0);
 		void DelLink(unsigned x, unsigned y);
-		unsigned CheckLink(unsigned x, unsigned y);
+		double CheckLink(unsigned x, unsigned y);
 	
 		unsigned CountLinks(unsigned x);
-		unsigned CountLinksStrength(unsigned x);
+		double CountLinksStrength(unsigned x);
 		unsigned CountFwdLinks(unsigned x);
-		unsigned CountFwdLinksStrength(unsigned x);
+		double CountFwdLinksStrength(unsigned x);
 		unsigned CountBckLinks(unsigned x);
-		unsigned CountBckLinksStrength(unsigned x);
-		TNodeLinks GetFwdLinks(unsigned node);
-		TNodeLinks GetBckLinks(unsigned node);
+		double CountBckLinksStrength(unsigned x);
+		TNodeLinks GetFwdLinks(unsigned node, unsigned maxLinks = 0);
+		TNodeLinks GetBckLinks(unsigned node, unsigned maxLinks = 0);
 		TGraphH::iterator NonExistant();
 		TGraphH::iterator NonExistantBck();
 	

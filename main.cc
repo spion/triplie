@@ -50,7 +50,7 @@ CAdminList ignores;
 unsigned int aimodel;
 unsigned int aipermute;
 
-string server, defchan, defnick, defuser, defname, defchar;
+string server, defnick, defuser, defname, defchar;
 vector<string> defchans;
 unsigned int defport;
 bool shouldreconnect;
@@ -108,7 +108,6 @@ int main(int argc, char** argv) {
 	readsettings();
 	cout << "Server " << server << ":" << defport << endl;
 	cout << "Nickname: " << defnick << " Ident: " << defuser << endl;
-	cout << "Default channel: " << defchan << endl;
 	//* this might need another seed in WIN32 *//
 	srand(time(0));
 	
@@ -352,10 +351,12 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn)
 				{
 					if (x>3)
 					{
-					tai.setdatastring(tokens[2] + " " + tokens[3]);
-					tai.extractkeywords();
+					string temp_keys = subtokstring(tokens,2,100," ");
+					tai.setdatastring(temp_keys);
+					//tai.setdatastring(tokens[2] + " " + tokens[3]);
+					//tai.extractkeywords();
 					tai.connectkeywords(aimodel);
-					string res = string("Result: ") 
+					string res = string("Result(") + temp_keys + string(") :")
 							   + tai.getdatastring("(null)", rand());
 					irc_conn->privmsg(wheretosend.c_str(), 
 							res.c_str());

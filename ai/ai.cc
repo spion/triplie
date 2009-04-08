@@ -59,7 +59,7 @@ void AI::learnonlymarkov()
 	
 	for (unsigned k = 0; k < keywords.size(); ++k)
 	{
-		dictionary.AddWord(keywords[k]); //non-text learn
+		dictionary.AddWord(keywords[k]); //non-text learn possible.
 	}
 	markov.BeginTransaction();
 	markov.remember(keywords);
@@ -178,29 +178,36 @@ void AI::learndatastring(const string& bywho, const string& where, const time_t&
 	markov.remember(markov_words);
 	markov.EndTransaction();
 	//cout << "Okay okay" << endl;
-	extractkeywords(); // this might cause bugs.
+	// this might cause bugs.
 	//cout << "->OK0.1" << endl;
-	context[where].push(bywho, keywords, when);
-	//cout << "OkayXokay" << endl;
 	if (Distributed)
 	{
 		SendLearnKeywords();
 	}
+	if (where != "(null)")
+	{
+		extractkeywords(); 
+		context[where].push(bywho, keywords, when);
+	}
+	//cout << "OkayXokay" << endl;
+
 
 }
 
 void AI::expandkeywords()
 {
 	map<unsigned, double> kcontext;
+	map<unsigned, double> kcontextCount;
 	map<unsigned, double>::iterator z;
-	map<unsigned, unsigned>::iterator reply_keywrd;
+	TNodeLinks::iterator reply_keywrd;
 	vector<unsigned>::iterator keywrd;
 	vector<CMContext> results;
 	vector<CMContext>::iterator rit;
 	map<unsigned, double> modifiers;
 	
 	//cout << "Levenstein expanding..." << endl;
-	/*
+	
+	
 	map<unsigned, map<unsigned, string> > expansionmap
 		= dictionary.FindSimilarWords(keywords);
 	for (map<unsigned, map<unsigned, string> >::iterator similars =
@@ -214,33 +221,67 @@ void AI::expandkeywords()
 			keywords.push_back(x->first);
 		}
 		modifiers[similars->first] = similars->second.size();
-	}*/
+	}
+	// End of levenstein expanding
+	
 	//sort(keywords.begin(), keywords.end());
 	for (keywrd = keywords.begin(); keywrd != keywords.end(); ++keywrd)
 	{
-		TNodeLinks req_keywrd;
-		req_keywrd = vertical.GetFwdLinks(*keywrd);
-		unsigned req_keywrd_occurances = dictionary.occurances(*keywrd);
-
-		if (req_keywrd.size() > 0) {
-			for (reply_keywrd = req_keywrd.begin(); 
-				 reply_keywrd != req_keywrd.end(); 
+		TNodeLinks req_keywrd[2];
+		req_keywrd[0] = vertical.GetFwdLinks(*keywrd, TRIP_MAXKEY*2);
+		req_keywrd[1] = vertical.GetBckLinks(*keywrd, TRIP_MAXKEY*2);
+		double req_keywrd_occurances = dictionary.occurances(*keywrd);
+		for (unsigned mapInd = 0; mapInd <= 1; ++mapInd)
+		{
+		if (req_keywrd[mapInd].size() > 0) {
+			for (reply_keywrd = req_keywrd[mapInd].begin(); 
+				 reply_keywrd != req_keywrd[mapInd].end(); 
 				 ++reply_keywrd)
 			{
-				if (scorekeyword(reply_keywrd->first) > 0.0)
+				double reply_keywrd_occurances 
+						= dictionary.occurances(reply_keywrd->first);
+				double candidate_score;
+				if ((candidate_score = scorekeyword_bycount(reply_keywrd->first) > 0.0))
 				{
-				 	kcontext[reply_keywrd->first] += 
+					double co_occur = reply_keywrd->second;
+					double minimumf = min(reply_keywrd_occurances,req_keywrd_occurances);
+					if (minimumf < co_occur) { minimumf = co_occur; }
+					
+					/*
+					double key_value = 2.0 * (candidate_score + 1.0)
+											/ (candidate_score + 10.0);
+					*/
+					/*double assoc_value = 2.0 * (x + 0.3) / (x + 4.0);*/
+					double divider_one = 2.0 * (2.0 + req_keywrd_occurances)
+										/ (20.0 + req_keywrd_occurances);
+					
+					double divider_two = 2.0 * (modifiers[*keywrd] + 1.0) 
+											/ (modifiers[*keywrd] + 3.0);
+					double divider_tree = 
+						2.0 * (2.0 + reply_keywrd_occurances )
+										/ (20.0 + reply_keywrd_occurances);
+				 	
+					kcontext[reply_keywrd->first] += (co_occur / minimumf)
+												/ divider_one 
+												/ divider_two
+												/ divider_tree;
+					kcontextCount[reply_keywrd->first] += 1.0;
+					
+					/*
 					log(1.0 + reply_keywrd->second) / req_keywrd_occurances
 						/ req_keywrd.size(); // (1.0 + modifiers[*keywrd]);
+						*/
 				}
 			}
 		}
+		} // for both maps
 	}
 	CMContext element;
 	for (z = kcontext.begin(); z != kcontext.end(); ++z)
 	{
 			element.wrd = z->first;
-			element.cnt = z->second;
+			double cAssociators = kcontextCount[z->first];
+			element.cnt = z->second * cAssociators;
 			results.push_back(element);
 	}
 	sort(results.begin(), results.end());
@@ -281,7 +322,6 @@ void AI::setdatastring(const string& datastring) {
 		}
 	}
 	lowercase(theline);
-	//theline[x]=to//lower(theline[x]);
 	if (theline!="") {
 		tokenize(theline,strkeywords," \t\n");
 	}
@@ -321,10 +361,12 @@ const string AI::getdatastring(const string& where, const time_t& when) {
 				{ theline=theline+" "+kwrd; }
 		}
 	}
-	extractkeywords(); //this might cause bugs
-	//if (where != "")
-	context[where].my_dellayed_context = keywords;
-	context[where].my_dellayed_context_time = when;
+	if (where != "(null)")
+	{
+		extractkeywords(); //this might cause bugs
+		context[where].my_dellayed_context = keywords;
+		context[where].my_dellayed_context_time = when;
+	}
 	return theline;
 }
 
@@ -358,8 +400,8 @@ void AI::extractkeywords() {
 }
 
 //REFACTOR: Move to CAIStatistics
-const float AI::scorekeywords() {
-	float curscore = 0.01;
+const float AI::scorekeywords(const map<unsigned, bool>& keymap) {
+	double curscore = 0.01;
 	map<unsigned,bool> usedword;
 	unsigned int it; unsigned twrd;
 	for (it=0;it<keywords.size();it++)
@@ -369,7 +411,12 @@ const float AI::scorekeywords() {
 		{
 			if (usedword.find(twrd) == usedword.end())
 			{
-				curscore+= scorekeyword(twrd);
+				double keyscore = scorekeyword(twrd);
+				curscore+= (keyscore > 0)?1:-1;
+				// Reward the usage of more specified keywords
+				if (keymap.find(twrd) != keymap.end()) { // is in keymap
+					curscore += 2.0 * MINIMUM_INFO_BITS;
+				}
 				usedword[twrd] = true;
 			}
 			else
@@ -377,24 +424,29 @@ const float AI::scorekeywords() {
 				curscore -= MINIMUM_INFO_BITS; // repetition penalty
 			}
 		}
-		else { 
-			curscore += 4.0 * log(1.0 / dictionary.occurances()) / log(2.0); 
-		} 
-		// disjoint parts penalty.
+		//cout << (keywords[it] != 0 ? dictionary.GetWord(keywords[it]): "<0>");
+		//cout << " ";
+			
 	}
-	return curscore / (keywords.size()+1.0);
+	//cout << "(" << (curscore / (keymap.size() + 0.1)) <<  ")";
+	//cout << endl;
+	return curscore / (keymap.size() + 0.01);
 }
 
 void AI::scoreshuffles(int method)
 {
-	
+	map<unsigned, bool> keyword_map;
+	for (unsigned i = 0; i < keywords.size(); ++i)
+	{
+		keyword_map[keywords[i]] = true;
+	}
 	vector<vector<unsigned> >::iterator it;
 	scores.clear();
 	for (it=shuffles.begin();it!=shuffles.end();it++)
 	{
 		keywords.clear();
 		keywords = *it;
-		scores.push_back(scorekeywords());
+		scores.push_back(scorekeywords(keyword_map));
 	}
 }
 
@@ -413,6 +465,7 @@ void AI::keywordsbestshuffle()
 		}
 		++it;++scoreit;
 	}
+	
 	//cout << "## answer score (" << bestscore << ")" << endl;
 }
 
@@ -505,12 +558,21 @@ void AI::connectkeywords(int method, int nopermute)
 const float AI::scorekeyword(unsigned wrd)
 {
 	//cout << "0.0 - log(" << dictionary.occurances(wrd) << "/"
-	//				   << dictionary.occurances() << ") / log(2) - 10.0" << endl; 
+	//				   << dictionary.occurances() << ") / log(2) - 10.0" << endl;
+	/*
 	return 0.0 - log(1.0 * dictionary.occurances(wrd) 
 					  / dictionary.occurances()) / log(2)
 					  - MINIMUM_INFO_BITS; 
-
+	*/
+	return scorekeyword_bycount(dictionary.occurances(wrd));
 	// at least MINIMUM_INFO_BITS bits needed to get positive value
+}
+
+const float AI::scorekeyword_bycount(unsigned wcnt)
+{
+	return 0.0 - log(1.0 * wcnt 
+					  / dictionary.occurances()) / log(2)
+					  - MINIMUM_INFO_BITS;
 }
 
 unsigned AI::countwords() { return dictionary.count(); }

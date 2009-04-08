@@ -2,7 +2,11 @@ all: tdb
 
 .PHONY:bootstrap clean
 
-bootstrap: triplie.db
+bootstrap: tdb
+	./tdb
+
+regenbootstrap:tdb
+	./tdb noindex
 
 tdb: transferdb.cc
 	${CXX} ${CXXFLAGS} -lsqlite3 -lpthread -L/usr/local/lib -I/usr/local/include transferdb.cc -o tdb

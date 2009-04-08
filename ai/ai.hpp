@@ -28,7 +28,7 @@
 
 #include <deque>
 
-#define TRIP_MAXKEY_DEFAULT 8
+#define TRIP_MAXKEY_DEFAULT 7
 
 
 using namespace std;
@@ -62,8 +62,9 @@ class AI {
 		unsigned vertCount;
 
 		//keyword functions
-		const float scorekeywords();
+		const float scorekeywords(const map<unsigned, bool>& keymap);
 		const float scorekeyword(unsigned wrd);
+		const float scorekeyword_bycount(unsigned wcnt);
 	
 		//debug functions
 		void outvector(vector<unsigned>& v);

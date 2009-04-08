@@ -66,7 +66,7 @@ class CContextQueue
 {
 	private:
 		deque<CContext> context;
-		map<unsigned, map<unsigned, unsigned> > conLinks;
+		map<unsigned, map<unsigned, double> > conLinks;
 		map<string, bool> areNicks;
 		unsigned conMax;
 		unsigned conCount;
@@ -78,7 +78,7 @@ class CContextQueue
 		vector<unsigned> my_dellayed_context;
 		time_t my_dellayed_context_time;
 		CContextQueue() {
-			conMax=6;
+			conMax=3;
 			conCount=0;
 		}
 		bool isNick(const string& n);

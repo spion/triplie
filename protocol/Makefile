@@ -1,4 +1,4 @@
-
+ECXX="-Wall"
 
 all: triproto-lib.a triprotomaster-lib.a
 
@@ -9,16 +9,16 @@ triprotomaster-lib.a: triprotomaster.o socket.o
 	ar rcs triprotomaster-lib.a triprotomaster.o socket.o
 
 triproto.o: triproto.cc
-	${CXX} ${CXXFLAGS} -c triproto.cc -o triproto.o
+	${CXX} ${CXXFLAGS} ${ECXX} -c triproto.cc -o triproto.o
 
 clientsocket.o: ClientSocket.cpp 
-	${CXX} ${CXXFLAGS} -c ClientSocket.cpp -o clientsocket.o
+	${CXX} ${CXXFLAGS} ${ECXX} -c ClientSocket.cpp -o clientsocket.o
 
 serversocket.o: ServerSocket.cpp 
-	${CXX} ${CXXFLAGS} -c ServerSocket.cpp -o serversocket.o
+	${CXX} ${CXXFLAGS} ${ECXX} -c ServerSocket.cpp -o serversocket.o
 
 socket.o: Socket.cpp 
-	${CXX} ${CXXFLAGS} -c Socket.cpp -o socket.o
+	${CXX} ${CXXFLAGS} ${ECXX} -c Socket.cpp -o socket.o
 
 triprotomaster.o: triprotomaster.cc
-	${CXX} ${CXXFLAGS} -c triprotomaster.cc -o triprotomaster.o 
+	${CXX} ${CXXFLAGS} ${ECXX} -c triprotomaster.cc -o triprotomaster.o 

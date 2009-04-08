@@ -28,49 +28,35 @@ void CContextQueue::push(const string& bywho, vector<unsigned>& keywords,
 						 const time_t& when)
 {
 	deque<CContext>::iterator qit;
-	unsigned lastC = context.size() - 1;
 	string bywhol = bywho;
 	lowercase(bywhol);
-	areNicks[bywhol] = true;
-	if ((context.size() > 0) && (bywhol == context[lastC].nick))
+	if (context.size() > 1)
 	{
-		context[lastC].keywords.insert(context[lastC].keywords.end(),
-									   keywords.begin(), keywords.end()
-									  );
-		context[lastC].addtime = when;
-		
+		relink();
+		learn();
 	}
-	else {
-		if (context.size() > 1)
-		{
-			relink();
-			learn();
-		}
-		if (context.size() >= conMax) {
-			context.pop_front();
-		}
-		CContext element;
-		element.nick = bywhol;
-		element.keywords = keywords;
-		element.addtime = when;
+	if (context.size() > conMax) {
+		context.pop_front();
+	}
+	CContext element;
+	element.nick = bywhol;
+	element.keywords = keywords;
+	element.addtime = when;
+	context.push_back(element);
+	if (my_dellayed_context.size())
+	{
+		element.nick = "(me)";
+		element.keywords = my_dellayed_context;
+		element.addtime = my_dellayed_context_time;
 		context.push_back(element);
-		
-		if (my_dellayed_context.size())
-		{
-			vector<unsigned> mykeys = my_dellayed_context;
-			my_dellayed_context.clear();
-			push("(me)",mykeys, my_dellayed_context_time); 
-		}
+		my_dellayed_context.clear();
 	}
+	
 }
 
 bool CContextQueue::isNick(const string& n)
 {
 	string nl = n; lowercase(nl);
-	if (areNicks.find(nl) != areNicks.end())
-	{
-		return true;
-	}
 	return false;
 }
 
@@ -82,14 +68,13 @@ void CContextQueue::learn()
 	
 	if (last.nick == string("(me)")) return; // don't enforce my connections.
 	
-	map<std::pair<unsigned, unsigned>, bool> IncrementApplied;
-	
 	vertical->BeginTransaction();
 	
-	for (qit = 0; qit < context.size() - 1; ++qit)
+	map<std::pair<unsigned, unsigned>, bool> IncrementApplied;
+	for (qit = 0; qit < context.size(); ++qit)
 	{
 		CContext& current = context[qit];
-		unsigned connectedness = conLinks[qit][context.size() - 1];
+		double connectedness = conLinks[qit][context.size() - 1];
 		if (connectedness > 0)
 		{
 			if (connectedness > 10)
@@ -102,7 +87,6 @@ void CContextQueue::learn()
 				for (jt = last.keywords.begin(); 
 					 jt != last.keywords.end(); ++jt)
 				{
-					
 					if (*it != *jt)
 					{
 						std::pair<unsigned, unsigned> p(*it,*jt);
@@ -116,6 +100,7 @@ void CContextQueue::learn()
 				} // for all keys in last.
 			} // for all keys in first
 		} // should be connected
+		IncrementApplied.clear();
 	} // for qit
 	
 	vertical->EndTransaction();
@@ -125,60 +110,24 @@ void CContextQueue::learn()
 void CContextQueue::relink()
 {
 	conLinks.clear();
+	unsigned last_it = context.size() - 1;
 	CContext& last = context[context.size() - 1];
 	map<unsigned, string> wcache;
-	for (unsigned wit = 0; wit != last.keywords.size(); ++ wit)
-	{
-		wcache[wit] = dictionary->GetWord(last.keywords[wit]);
-	}
+	//for (unsigned wit = 0; wit != last.keywords.size(); ++ wit)
+	//{
+		//wcache[wit] = dictionary->GetWord(last.keywords[wit]);
+	//}
 	// for all queued texts...
-	for (unsigned qit = 0; qit < context.size() - 1; ++qit)
+	for (unsigned qit = 0; qit < context.size(); ++qit)
 	{
 		CContext& current = context[qit];
 		// need to be close in time.
 		if (abs(current.addtime - last.addtime) > TRIP_CONTEXT_TIMEOUT)
 				continue;
-		for (unsigned wit = 0; wit != last.keywords.size(); ++ wit)
-		{
-			string w = wcache[wit]; // a word from the last.
+		
+		conLinks[qit][last_it] = (qit+1.0)*(qit+1.0)
+								/ (last_it+1.0) * (last_it+1.0);
 			
-			// if last mentioned someone else in a word...
-			if (current.nick == w) { 
-				conLinks[qit][context.size() - 1] += 4; // add 3 links
-			}
-			// If they are closely iterating in a conversation...
-			if (qit == context.size() - 2)
-			{
-				unsigned recheck = 0;
-				// or = (conLinks[qit][context.size() - 1] += 1) maybe
-				for (unsigned witx = 0; witx < current.keywords.size(); ++witx)
-				{	
-					string wx = dictionary->GetWord(current.keywords[witx]);
-					// and they are both talking about something with the 
-					// same keyword symbols 
-					if (wx.size() > 4 && w.size() > 4 && 
-						(leven(wx,w) < LEVEN_MAGIC_LIMIT)) { 
-						 recheck = (conLinks[qit][context.size() - 1] += 1); 
-							// add one link per symbol (max 4 to 8)
-						if (recheck > 7) break;
-					}
-				}
-				//Total 8 points from this is maximum
-				if (recheck > 7) break;
-			}
-		}
 	}
-	for (unsigned qit = 0; qit < context.size() - 1; ++qit)
-	{
-		CContext& current = context[qit];
-		if (abs(current.addtime - last.addtime) > TRIP_CONTEXT_TIMEOUT)
-			continue;
-		if (current.keywords.size() == 0) continue;
-		string wx = dictionary->GetWord(current.keywords[0]);
-		// if last was mentioned by someone else:
-		if (wx == last.nick) { 
-			conLinks[qit][context.size() - 1] += 2; // add 2 links.
-		}
-		// total 10 points is absolute maximum.
-	}
+	
 }

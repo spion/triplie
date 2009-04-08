@@ -3,7 +3,7 @@ ECXX=-Wall
 LIBD=-L/usr/local/lib -lpthread -lsqlite3
 INCLUDED=-I/usr/local/include
 
-all: ai.o tokens.o dictionary.o graph.o newmarkov.o context.o
+all: ai-lib.a
 #libsqlitefunctions.so
 
 ai.o: ai.cc
@@ -29,3 +29,6 @@ libsqlitefunctions.so: extension-functions.c
 
 clean: 
 	rm *.o
+
+ai-lib.a: ai.o tokens.o dictionary.o graph.o newmarkov.o context.o
+	ar rcs ai-lib.a ai.o tokens.o dictionary.o graph.o newmarkov.o context.o

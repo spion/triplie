@@ -364,6 +364,7 @@ void CMarkov::all(vector<vector<unsigned> >& permutations, const unsigned& metho
 #endif
 
 	vector<vector<unsigned> > extras;
+	vector<unsigned> extra;
 	//vector<unsigned> permutation;	
 	unsigned permusize = permutations.size(); // size of original permutations
 	for (unsigned i = 0; i < permusize; ++i)
@@ -396,7 +397,20 @@ void CMarkov::all(vector<vector<unsigned> >& permutations, const unsigned& metho
 				{
 					head = partial(head,permutation[j],method);
 					// extra answers?
-					extras.push_back(partial(head,0,method));
+					if (permutation[j] != 0)
+					{
+						extra = partial(head,0,method);
+						if (extra.size() > 1)
+						{
+							for (vector<unsigned>::iterator ek = extra.begin() + 1;
+								 ek != extra.end(); ++ek)
+							{
+								if (*ek == 0)
+									extra.erase(ek + 1, extra.end());
+							}
+						}
+						extras.push_back(extra);
+					}
 				}
 				else
 				{
@@ -408,6 +422,15 @@ void CMarkov::all(vector<vector<unsigned> >& permutations, const unsigned& metho
 					headcache[locator] = head;
 			}
 #endif			
+		}
+		if (head.size() > 1)
+		{
+			for (vector<unsigned>::iterator ek = head.begin() + 1;
+		 		ek != head.end(); ++ek)
+			{
+			if (*ek == 0)
+				head.erase(ek + 1, head.end());
+			}
 		}
 		permutations[i] = head; // and add it to results
 	}
