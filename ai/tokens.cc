@@ -147,7 +147,7 @@ namespace UtfConverter
 				std:: cout << "Igonoring problem with unicode conversion s2w: "
 					<< utf8string << endl;
 #endif
-                //throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
+                throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
             }
             *targetstart = 0;
             return resultstring;
@@ -167,7 +167,7 @@ namespace UtfConverter
 				std:: cout << "Igonoring problem with unicode conversion s2w: "
 					<< utf8string << endl;
 #endif
-				//throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
+				throw UnicodeException(string("Error converting s2w: ") + utf8string + "\n");
             }
             *targetstart = 0;
             return resultstring;
@@ -232,6 +232,11 @@ void lowercase(string& s)
 	try 
 	{
 		ws = UtfConverter::FromUtf8(s);
+		for (unsigned i = 0; i < ws.size(); ++i)
+			ws[i] = towlower(ws[i]);
+		s = UtfConverter::ToUtf8(ws);
+		s = s.substr(0,s.find_first_of('\0'));
+
 	}
 	catch (UnicodeException e)
 	{
@@ -241,10 +246,5 @@ void lowercase(string& s)
 		return;
 		//cout << "error converting to unicode" << endl;
 	}
-	for (unsigned i = 0; i < ws.size(); ++i)
-		ws[i] = towlower(ws[i]);
-	//wcout << ws << endl;
-	s = UtfConverter::ToUtf8(ws);
-	s = s.substr(0,s.find_first_of('\0'));
 	//cout << "lowercase: " << s << endl;
 }
