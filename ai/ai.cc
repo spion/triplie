@@ -188,6 +188,7 @@ void AI::learndatastring(const string& bywho, const string& where, const time_t&
 	{
 		extractkeywords(); 
 		context[where].push(bywho, keywords, when);
+		//cout << " --- context push" << endl;
 	}
 	//cout << "OkayXokay" << endl;
 
@@ -206,14 +207,15 @@ void AI::expandkeywords()
 	map<unsigned, double> modifiers;
 	
 	//cout << "Levenstein expanding..." << endl;
+	typedef pair<string, double> LevenValue;
+	typedef map<unsigned, LevenValue > LevenItem;
+	typedef map<unsigned, LevenItem> LevenMap;
 	
-	
-	map<unsigned, map<unsigned, string> > expansionmap
-		= dictionary.FindSimilarWords(keywords);
-	for (map<unsigned, map<unsigned, string> >::iterator similars =
+	LevenMap expansionmap = dictionary.FindSimilarWords(keywords);
+	for (LevenMap::iterator similars =
 		expansionmap.begin(); similars != expansionmap.end(); ++similars)
 	{
-		for (map<unsigned,string>::iterator x = 
+		for (LevenItem::iterator x = 
 			 	similars->second.begin();
 				 x != similars->second.end(); ++x)
 		{
@@ -228,8 +230,8 @@ void AI::expandkeywords()
 	for (keywrd = keywords.begin(); keywrd != keywords.end(); ++keywrd)
 	{
 		TNodeLinks req_keywrd[2];
-		req_keywrd[0] = vertical.GetFwdLinks(*keywrd, TRIP_MAXKEY*2);
-		req_keywrd[1] = vertical.GetBckLinks(*keywrd, TRIP_MAXKEY*2);
+		req_keywrd[0] = vertical.GetFwdLinks(*keywrd, TRIP_MAXKEY*100);
+		//req_keywrd[1] = vertical.GetBckLinks(*keywrd, TRIP_MAXKEY*100);
 		double req_keywrd_occurances = dictionary.occurances(*keywrd);
 		for (unsigned mapInd = 0; mapInd <= 1; ++mapInd)
 		{
@@ -244,7 +246,7 @@ void AI::expandkeywords()
 				if ((candidate_score = scorekeyword_bycount(reply_keywrd->first) > 0.0))
 				{
 					double co_occur = reply_keywrd->second;
-					double minimumf = min(reply_keywrd_occurances,req_keywrd_occurances);
+					double minimumf = max(reply_keywrd_occurances,req_keywrd_occurances);
 					if (minimumf < co_occur) { minimumf = co_occur; }
 					
 					/*
@@ -252,14 +254,12 @@ void AI::expandkeywords()
 											/ (candidate_score + 10.0);
 					*/
 					/*double assoc_value = 2.0 * (x + 0.3) / (x + 4.0);*/
-					double divider_one = 2.0 * (2.0 + req_keywrd_occurances)
-										/ (20.0 + req_keywrd_occurances);
+					double divider_one = 2.0 * log(1.0 + reply_keywrd_occurances);
 					
 					double divider_two = 2.0 * (modifiers[*keywrd] + 1.0) 
 											/ (modifiers[*keywrd] + 3.0);
 					double divider_tree = 
-						2.0 * (2.0 + reply_keywrd_occurances )
-										/ (20.0 + reply_keywrd_occurances);
+						2.0 * log(1.0 + reply_keywrd_occurances);
 				 	
 					kcontext[reply_keywrd->first] += (co_occur / minimumf)
 												/ divider_one 
@@ -286,6 +286,12 @@ void AI::expandkeywords()
 	}
 	sort(results.begin(), results.end());
 	reverse(results.begin(), results.end());
+	for (unsigned k = 0; k < results.size(); ++k)
+	{
+		cout << dictionary.GetWord(results[k].wrd) 
+			<< "(" << results[k].cnt << ") "; 
+	}
+	cout << endl;
 	unsigned keycnt = 1;
 	keywords.clear();
 	for (rit = results.begin(); rit != results.end(); ++rit)
@@ -366,6 +372,24 @@ const string AI::getdatastring(const string& where, const time_t& when) {
 		extractkeywords(); //this might cause bugs
 		context[where].my_dellayed_context = keywords;
 		context[where].my_dellayed_context_time = when;
+	}
+	return theline;
+}
+
+const string AI::getdatastring()
+{
+	string theline = "";
+	if (keywords.size())
+	{
+		for (unsigned i=0;i<keywords.size();i++)
+		{
+			string kwrd = dictionary.GetWord(keywords[i]);
+			string kwrdval = "(" 
+						   + 
+							convert<string>(dictionary.occurances(keywords[i]))
+						   + ")";
+			theline += kwrd + kwrdval + " ";
+		}
 	}
 	return theline;
 }
@@ -557,13 +581,6 @@ void AI::connectkeywords(int method, int nopermute)
 //REFACTOR: move to CAIStatistics.
 const float AI::scorekeyword(unsigned wrd)
 {
-	//cout << "0.0 - log(" << dictionary.occurances(wrd) << "/"
-	//				   << dictionary.occurances() << ") / log(2) - 10.0" << endl;
-	/*
-	return 0.0 - log(1.0 * dictionary.occurances(wrd) 
-					  / dictionary.occurances()) / log(2)
-					  - MINIMUM_INFO_BITS; 
-	*/
 	return scorekeyword_bycount(dictionary.occurances(wrd));
 	// at least MINIMUM_INFO_BITS bits needed to get positive value
 }

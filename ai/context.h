@@ -78,9 +78,10 @@ class CContextQueue
 		vector<unsigned> my_dellayed_context;
 		time_t my_dellayed_context_time;
 		CContextQueue() {
-			conMax=3;
+			conMax=1;
 			conCount=0;
 		}
+		void setContextDepth(int contextDepth) { conMax = contextDepth; } 
 		bool isNick(const string& n);
 		void setVertical(CGraph * v, CDictionary * d) { vertical = v; dictionary = d;  }
 		void push(const string& bywho, vector<unsigned>& keywords, const time_t& when);

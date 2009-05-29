@@ -26,7 +26,6 @@ using std::ifstream;
 using std::ofstream;
 
 
-
 int minimum(int x, int y, int z) 
 {
 	return x < y ? (x < z ? x : z) : (y < z ? y : z);
@@ -192,14 +191,14 @@ const string CDictionary::GetWord(unsigned key) {
 }
 
 
-map<unsigned, map<unsigned,string> > CDictionary::FindSimilarWords(const vector<unsigned>& wordlist)
+map<unsigned, map<unsigned,pair<string, double> > > CDictionary::FindSimilarWords(const vector<unsigned>& wordlist)
 {
 	db->Query("SELECT id,word FROM dict;");
 	vector<string> v;
 	vector<string> w_strings;
 	map<unsigned, string> full_list;
 	map<string, unsigned> w_list;
-	map<unsigned, map<unsigned, string> > groups;
+	map<unsigned, map<unsigned,pair<string, double> > > groups;
 	//pass one, divide the words between in-the-list and not-in-the-list
 	while (( (v = db->GetNextResult()).size() > 1 ))
 	{
@@ -209,7 +208,7 @@ map<unsigned, map<unsigned,string> > CDictionary::FindSimilarWords(const vector<
 		{
 			if (wordlist[i] == index)
 			{
-				if (v[1].size() > 3)
+				if (v[1].size() > LEVEN_IGNORE_WORDSIZE)
 				{
 					w_strings.push_back(v[1]);
 					w_list[v[1]] = index;
@@ -229,10 +228,12 @@ map<unsigned, map<unsigned,string> > CDictionary::FindSimilarWords(const vector<
 		bool close_enough = false;
 		for (unsigned i=0; i < w_strings.size(); ++i)
 		{
-			if ((leven(it->second,w_strings[i]) < LEVEN_MAGIC_LIMIT))
+			double tempLeven = 100.0;
+			if ( ((tempLeven = leven(it->second,w_strings[i])) < LEVEN_MAGIC_LIMIT) )
 			{
 				close_enough = true;
-				groups[w_list[w_strings[i]]][it->first] = it->second;
+				groups[w_list[w_strings[i]]][it->first] = 
+					std::pair<string, double>(it->second,tempLeven);
 				break;
 			}
 		}
@@ -240,7 +241,10 @@ map<unsigned, map<unsigned,string> > CDictionary::FindSimilarWords(const vector<
 		{
 			full_list.erase(it++);
 		}
-		else { ++it; }
+		else { 
+			//cout << it->second << endl;
+			++it;
+		}
 	}
 	return groups;
 }

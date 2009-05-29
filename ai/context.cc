@@ -32,8 +32,8 @@ void CContextQueue::push(const string& bywho, vector<unsigned>& keywords,
 	lowercase(bywhol);
 	if (context.size() > 1)
 	{
-		relink();
-		learn();
+		this->relink();
+		this->learn();
 	}
 	if (context.size() > conMax) {
 		context.pop_front();
@@ -48,8 +48,8 @@ void CContextQueue::push(const string& bywho, vector<unsigned>& keywords,
 		element.nick = "(me)";
 		element.keywords = my_dellayed_context;
 		element.addtime = my_dellayed_context_time;
-		context.push_back(element);
 		my_dellayed_context.clear();
+		push(element.nick,element.keywords,element.addtime);
 	}
 	
 }
@@ -66,10 +66,8 @@ void CContextQueue::learn()
 	vector<unsigned>::iterator it,jt;
 	CContext& last = context[context.size() - 1];
 	
-	if (last.nick == string("(me)")) return; // don't enforce my connections.
-	
+	if (last.nick == string("(me)")) { return; } // don't enforce my connections.
 	vertical->BeginTransaction();
-	
 	map<std::pair<unsigned, unsigned>, bool> IncrementApplied;
 	for (qit = 0; qit < context.size(); ++qit)
 	{
@@ -77,9 +75,9 @@ void CContextQueue::learn()
 		double connectedness = conLinks[qit][context.size() - 1];
 		if (connectedness > 0)
 		{
-			if (connectedness > 10)
+			if (connectedness > 2)
 			{
-				connectedness = 10; // limit the increase to 10 points.
+				connectedness = 2; // limit the increase to 2 points.
 			}
 			for (it = current.keywords.begin(); 
 				 it != current.keywords.end(); ++it)
@@ -102,7 +100,6 @@ void CContextQueue::learn()
 		} // should be connected
 		IncrementApplied.clear();
 	} // for qit
-	
 	vertical->EndTransaction();
 }
 
@@ -124,10 +121,8 @@ void CContextQueue::relink()
 		// need to be close in time.
 		if (abs(current.addtime - last.addtime) > TRIP_CONTEXT_TIMEOUT)
 				continue;
-		
 		conLinks[qit][last_it] = (qit+1.0)*(qit+1.0)
 								/ (last_it+1.0) * (last_it+1.0);
 			
 	}
-	
 }

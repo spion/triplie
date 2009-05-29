@@ -27,13 +27,14 @@
 #include "sqlite_class.h"
 #define TRIP_MAXSIZE 65500
 
-#define MAX_WSIZE 30
+#define MAX_WSIZE 60
 
-#define LEVEN_MAGIC_LIMIT 0.167
+#define LEVEN_MAGIC_LIMIT 0.13
+#define LEVEN_IGNORE_WORDSIZE 5
 
 using std::string;
 using std::map;
-
+using std::pair;
 
 
 class CDictionary
@@ -63,7 +64,7 @@ class CDictionary
 		unsigned occurances(const string& wrd);
 		unsigned occurances();
 
-		map<unsigned, map<unsigned,string> > 
+		map< unsigned, map<unsigned,pair<string, double> >  >
 			FindSimilarWords(const vector<unsigned>& wordlist);
 
 		void BeginTransaction();

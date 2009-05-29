@@ -37,7 +37,7 @@ using namespace std;
 
 AI tai("botdata/triplie.db");
 
-unsigned long int defmodel=1;
+unsigned long int defmodel=2;
 
 bool shouldtalk;
 
@@ -141,6 +141,7 @@ int main(int argc, char** argv) {
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();
 				tai.expandkeywords();
+				cout << "- " << tai.getdatastring() << endl;
 				//cout << ((double(clock()) - clockstart)
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();

@@ -84,15 +84,13 @@ int main(int argc, char** argv)
 	db.QueryExec("CREATE INDEX IF NOT EXISTS wordindex ON dict (word);");
 	if (argc < 2)
 	{
-		cout << "Creating assoc one index...." << endl;
-		db.QueryExec("CREATE INDEX if not exists associndex_one ON assoc(id1);");
-		cout << "Creating assoc two index...." << endl;
-		db.QueryExec("CREATE INDEX if not exists associndex_two ON assoc(id2);");
+		cout << "Creating assoc one index.... not needed" << endl;
+		//db.QueryExec("CREATE INDEX if not exists associndex_one ON assoc(id1);");
+		cout << "Creating assoc two index.... not needed" << endl;
+		//db.QueryExec("CREATE INDEX if not exists associndex_two ON assoc(id2);");
 		cout << "Creating all markov indeces...." << endl;
-		db.QueryExec(" \
-		create index if not exists markov_i_1_2 on markov(id1,id2); \
-		create index if not exists markov_i_2_3 on markov(id2,id3); \
-		");
+		//db.QueryExec("create index if not exists markov_i_1_2 on markov(id1,id2);");
+		db.QueryExec("create index if not exists markov_i_2_3 on markov(id2,id3);");
 	}
 	else
 	{

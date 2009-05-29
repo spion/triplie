@@ -236,7 +236,7 @@ void lowercase(string& s)
 			ws[i] = towlower(ws[i]);
 		s = UtfConverter::ToUtf8(ws);
 		s = s.substr(0,s.find_first_of('\0'));
-
+		
 	}
 	catch (UnicodeException e)
 	{

@@ -17,7 +17,6 @@
  */
 
 
-//we dont always need iostream... unless we debug, right?
 
 #ifndef _AI_H
 #define _AI_H
@@ -28,7 +27,7 @@
 
 #include <deque>
 
-#define TRIP_MAXKEY_DEFAULT 7
+#define TRIP_MAXKEY_DEFAULT 8
 
 
 using namespace std;
@@ -98,6 +97,7 @@ class AI {
 		void setdatastring(const string& datastring);
 		void learndatastring(const string& bywho, const string& where, const time_t& when);
 		const string getdatastring(const string& where, const time_t& when);
+		const string getdatastring();
 
 		void extractkeywords();
 		void expandkeywords();

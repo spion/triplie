@@ -1,4 +1,4 @@
-CXXFLAGS=
+CXXFLAGS=-g -DTRIP_DEBUG
 ECXX=-Wall
 C=gcc
 LIBVAR=-L/usr/local/lib -lpthread -lsqlite3
