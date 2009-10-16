@@ -92,7 +92,7 @@ void signal_handler(int sig)
 }
 
 
-int main(int argc, char** argv) {
+int main() {
 	setlocale(LC_ALL, "en_US.utf8");
 	defchar="!";
 	sleepmin=0; sleepmax=0;
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 	
 	readadmins();
 	readignores();
-	tai.readalldata("botdata");
+	tai.readalldata();
 	cout << tai.countwords() << " words, ";
 	cout << tai.countrels() << " relations, ";
 	cout << tai.countvrels() << " associations in database." << endl;
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 	}
 	
 	tai.SendAllSlavesAndWait("06 \n");
-	tai.savealldata(string("botdata"));
+	tai.savealldata();
 	#ifdef TRIP_DEBUG
 	cout << "Loop exit, triplie shutdown." << endl;
 	#endif
@@ -194,8 +194,8 @@ void forktobg() {
  * IRC HOOKS     *
  * ***************/
 
-int end_of_motd(char* params, irc_reply_data* hostd, void* conn) {
-		IRC* irc_conn=(IRC*)conn;
+int end_of_motd(char*, irc_reply_data* , void* ) {
+		IRC* irc_conn=&conn;
 		vector<string>::iterator it;
 		for (it=defchans.begin(); it!=defchans.end(); it++)
 		{

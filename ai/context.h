@@ -68,7 +68,8 @@ class CContextQueue
 		deque<CContext> context;
 		map<unsigned, map<unsigned, double> > conLinks;
 		map<string, bool> areNicks;
-		unsigned conMax;
+		unsigned conMax; // Thinking context maximum.
+		unsigned conMaxLearn; // Learning context maximum
 		unsigned conCount;
 		CGraph * vertical;
 		CDictionary * dictionary;

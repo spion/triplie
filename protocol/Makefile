@@ -1,4 +1,4 @@
-ECXX="-Wall"
+ECXX=-Wall -Wextra -pedantic
 
 all: triproto-lib.a triprotomaster-lib.a
 

@@ -53,18 +53,18 @@ class CMarkov
 		void OpenDB() { db->OpenDB(); }
 		void BeginTransaction();
 		void EndTransaction();
-		void setOrder(unsigned N) { }
+		void setOrder() { }
 		void remember(vector<unsigned>& sentence);
 	
 		vector<vector<unsigned> >
 			connect (const vector<unsigned>& keywords, unsigned method=0, 
-					 long long perm_begin = -1, long long perm_end = -1);
+					 long perm_begin = -1, long perm_end = -1);
 		vector< vector<unsigned> >
 			dconnect(const vector<unsigned>& keywords, unsigned method=0, 
 						unsigned MAXPERMS = TRIP_AI_MAXPERMUTATIONS);
 	
-		void savedata(const string&);
-		long readdata(const string&);
+		void savedata();
+		long readdata();
 		unsigned count();// { return internalCount; }
 		void ClearAll();
 		void AddRow(const string&);
@@ -72,7 +72,7 @@ class CMarkov
 		unsigned LinkStrength(unsigned x, unsigned y, unsigned order = 1);
 		unsigned LinkStrength(unsigned x, bool forward, unsigned order = 1);
 		
-		void Reindex(unsigned order = 1);
+		void Reindex();
 
 };
 

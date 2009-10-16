@@ -61,9 +61,9 @@ class AI {
 		unsigned vertCount;
 
 		//keyword functions
-		const float scorekeywords(const map<unsigned, bool>& keymap);
-		const float scorekeyword(unsigned wrd);
-		const float scorekeyword_bycount(unsigned wcnt);
+		float scorekeywords(const map<unsigned, bool>& keymap);
+		float scorekeyword(unsigned wrd);
+		float scorekeyword_bycount(unsigned wcnt);
 	
 		//debug functions
 		void outvector(vector<unsigned>& v);
@@ -73,7 +73,7 @@ class AI {
 
 		//shuffle functions
 		void generateshuffles();
-		void scoreshuffles(int method);
+		void scoreshuffles();
 		void keywordsbestshuffle();
 		int aipermute;
 		unsigned maxpermutecount;
@@ -86,12 +86,12 @@ class AI {
 		void UnsafeFastMode() { db.Query("PRAGMA journal_mode = MEMORY"); }
 		void UnsafeQuery(const string& s) { db.Query(s); }
 		unsigned TRIP_MAXKEY;
-		const long int countrels();
+		long int countrels();
 		unsigned countwords();
-		const unsigned countvrels();
+		unsigned countvrels();
 	
-		void readalldata(const string& datafolder);
-		void savealldata(const string& datafolder);
+		void readalldata();
+		void savealldata();
 		void prune_vertical_nonkeywords();
 
 		void setdatastring(const string& datastring);
@@ -101,7 +101,7 @@ class AI {
 
 		void extractkeywords();
 		void expandkeywords();
-		void connectkeywords(int method, int nopermute = 0);
+		void connectkeywords(int method);
 		void setpermute(int permute) { TRIP_MAXKEY = permute; }
 		void maxpermute(unsigned num) { maxpermutecount = num; }
 		bool useRandom;

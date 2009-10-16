@@ -41,7 +41,7 @@ AI::AI(string dbf): db(dbf) {
 	Distributed = false;
 	keywords.clear();
 	relcount=0;
-	markov.setOrder(6);
+	markov.setOrder();
 	setpermute(TRIP_MAXKEY_DEFAULT);
 	vertCount=0;
 	maxpermutecount = TRIP_AI_MAXPERMUTATIONS;
@@ -147,16 +147,16 @@ void AI::SendAllSlavesAndWait(const string& request)
 
 
 //REFACTOR: will continue to reside in AI
-void AI::readalldata(const string& datafolder) {
+void AI::readalldata() {
 	relcount=0;
 	dictionary.clear();
-	relcount+=dictionary.readwords(datafolder + "/words.dat");
-	vertCount+=vertical.ReadLinks(datafolder + "/relsv.dat");
+	relcount+=dictionary.readwords();
+	vertCount+=vertical.ReadLinks();
 }
 
 
 //REFACTOR: will continue to reside in AI
-void AI::savealldata(const string& datafolder) {
+void AI::savealldata() {
 
 }
 
@@ -304,7 +304,7 @@ void AI::expandkeywords()
 
 /* public */
 
-const long int AI::countrels() {
+long int AI::countrels() {
 	return markov.count();
 }
 
@@ -424,7 +424,7 @@ void AI::extractkeywords() {
 }
 
 //REFACTOR: Move to CAIStatistics
-const float AI::scorekeywords(const map<unsigned, bool>& keymap) {
+float AI::scorekeywords(const map<unsigned, bool>& keymap) {
 	double curscore = 0.01;
 	map<unsigned,bool> usedword;
 	unsigned int it; unsigned twrd;
@@ -436,7 +436,7 @@ const float AI::scorekeywords(const map<unsigned, bool>& keymap) {
 			if (usedword.find(twrd) == usedword.end())
 			{
 				double keyscore = scorekeyword(twrd);
-				curscore+= (keyscore > 0)?1:-1;
+				curscore+= (keyscore > 0)?1:0;
 				// Reward the usage of more specified keywords
 				if (keymap.find(twrd) != keymap.end()) { // is in keymap
 					curscore += 2.0 * MINIMUM_INFO_BITS;
@@ -445,7 +445,7 @@ const float AI::scorekeywords(const map<unsigned, bool>& keymap) {
 			}
 			else
 			{
-				curscore -= MINIMUM_INFO_BITS; // repetition penalty
+				curscore -= 0.5*MINIMUM_INFO_BITS; // repetition penalty
 			}
 		}
 		//cout << (keywords[it] != 0 ? dictionary.GetWord(keywords[it]): "<0>");
@@ -457,7 +457,7 @@ const float AI::scorekeywords(const map<unsigned, bool>& keymap) {
 	return curscore / (keymap.size() + 0.01);
 }
 
-void AI::scoreshuffles(int method)
+void AI::scoreshuffles()
 {
 	map<unsigned, bool> keyword_map;
 	for (unsigned i = 0; i < keywords.size(); ++i)
@@ -555,7 +555,7 @@ void AI::buildcleanup() {
 }
 
 
-void AI::connectkeywords(int method, int nopermute)
+void AI::connectkeywords(int method)
 {
 	string answerstr = ""; string tmpstr = "";
 	if (Distributed) {
@@ -571,7 +571,7 @@ void AI::connectkeywords(int method, int nopermute)
 			shuffles = markov.connect(keywords, method);
 		}	
 	}
-	scoreshuffles(0);
+	scoreshuffles();
 	keywordsbestshuffle();
 	replace(keywords.begin(),keywords.end(),
 			(unsigned)0,dictionary.GetKey(","));
@@ -579,13 +579,13 @@ void AI::connectkeywords(int method, int nopermute)
 }
 
 //REFACTOR: move to CAIStatistics.
-const float AI::scorekeyword(unsigned wrd)
+float AI::scorekeyword(unsigned wrd)
 {
 	return scorekeyword_bycount(dictionary.occurances(wrd));
 	// at least MINIMUM_INFO_BITS bits needed to get positive value
 }
 
-const float AI::scorekeyword_bycount(unsigned wcnt)
+float AI::scorekeyword_bycount(unsigned wcnt)
 {
 	return 0.0 - log(1.0 * wcnt 
 					  / dictionary.occurances()) / log(2)
@@ -594,7 +594,7 @@ const float AI::scorekeyword_bycount(unsigned wcnt)
 
 unsigned AI::countwords() { return dictionary.count(); }
 
-const unsigned AI::countvrels() {
+unsigned AI::countvrels() {
 	return vertical.count;
 }
 

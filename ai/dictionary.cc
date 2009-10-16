@@ -172,12 +172,12 @@ unsigned CDictionary::occurances()
 }
 
 
-unsigned int CDictionary::readwords(string wordsfile = "") {
+unsigned int CDictionary::readwords() {
 	db->Query("SELECT COUNT(id) FROM dict;");
 	return convert<unsigned>(db->GetLastResult()[0]);
 }
 
-void CDictionary::savewords(string wordsfile = "") {
+void CDictionary::savewords() {
 }
 
 const string CDictionary::GetWord(unsigned key) {

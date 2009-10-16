@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 					tokenize(happen_time,time_tokens,": ");
 					unsigned multipliers[] = {1, 60, 60, 24, 0};
 					for (unsigned j = time_tokens.size() - 1, jj=0; 
-						 (j >= 0) && (multipliers[jj]); --j, ++jj)
+						 (multipliers[jj]); --j, ++jj)
 					{
 						unsigned in_seconds = convert<unsigned>(time_tokens[j]);
 						unsigned backjj = jj;
@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
 							in_seconds *= multipliers[backjj--];
 						}
 						happen_time_sec += in_seconds;
+						if (j == 0) break;
 					}
 				}
 #ifdef _FEED_DEBUG
@@ -143,7 +144,7 @@ int main(int argc, char** argv) {
 		}
 	}
 	cout << endl << "Done eating." << endl;
-	tai.savealldata("botdata");
+	tai.savealldata();
 	cout << "Bye bye." << endl;
     return 0;
 }

@@ -188,12 +188,12 @@ TNodeLinks CGraph::GetBckLinks(unsigned x, unsigned maxLinks)
 
 
 
-void CGraph::SaveLinks(const string& sfile)
+void CGraph::SaveLinks()
 {
 
 }
 
-long int CGraph::ReadLinks(const string& sfile)
+long int CGraph::ReadLinks()
 {
 	return count;
 }

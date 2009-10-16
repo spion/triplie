@@ -57,8 +57,8 @@ class CDictionary
 		void AddWord(const string& word, const unsigned& howmany = 1);
 		void AddWord(const unsigned& word, const unsigned& howmany = 1, bool noInject = true) ;
 		unsigned count();
-		unsigned int readwords(string wordsfile);
-		void savewords(string wordsfile);
+		unsigned int readwords();
+		void savewords();
 	
 		unsigned occurances(unsigned wrd);
 		unsigned occurances(const string& wrd);

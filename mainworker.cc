@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 		ProtoPort = convert<int>(argv[1]);
 	}
 	AI tai("botdata/triplie.db");
-	tai.readalldata("botdata");
+	tai.readalldata();
 	tai.maxpermute(TRIP_AI_MAXPERMUTATIONS/2);
 	while (true)
 	{

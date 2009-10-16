@@ -58,7 +58,7 @@ double GetTickCount()
     The code.
  * ************************************* */
 
-int main(int argc, char** argv) {
+int main() {
 	setlocale(LC_ALL, "en_US.utf8");
 	Wildcard wildmatch;
 	string theline, matcher, aireply;
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 
 	//* this might need another seed in WIN32 *//
 	srand(time(0));
-	tai.readalldata("botdata");
+	tai.readalldata();
 	cout << tai.countwords() << " words, ";
 	cout << tai.countrels() << " relations known." << endl;
     cout << "Waiting for input. Commands: !save, !quit" << endl << endl;
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
                 //commands
                 if (tokens[0] == "!quit") { shouldtalk = false; }
                 else if (tokens[0] == "!save") {
-                	tai.savealldata("botdata");
+                	tai.savealldata();
                     cout << "!saved words and relations" << endl << endl;
                 }
 				else if (llen>1) {

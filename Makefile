@@ -1,5 +1,5 @@
 CXXFLAGS=-g -DTRIP_DEBUG
-ECXX=-Wall
+ECXX=-Wall -Wextra -pedantic
 C=gcc
 LIBVAR=-L/usr/local/lib -lpthread -lsqlite3
 INCVAR=-I/usr/local/include

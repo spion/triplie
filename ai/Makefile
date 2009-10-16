@@ -1,5 +1,5 @@
 CXXFLAGS=
-ECXX=-Wall
+ECXX=-Wall -Wextra -pedantic
 LIBD=-L/usr/local/lib -lpthread -lsqlite3
 INCLUDED=-I/usr/local/include
 

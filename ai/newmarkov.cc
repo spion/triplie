@@ -40,7 +40,7 @@ void CMarkov::CMarkovInit(SQLite* dbf)
 	db = dbf;
 }
 
-void CMarkov::Reindex(unsigned order)
+void CMarkov::Reindex()
 {
 
 }
@@ -106,12 +106,12 @@ unsigned CMarkov::LinkStrength(unsigned x, bool forward, unsigned order)
 	return convert<unsigned>(db->GetLastResult()[0]);
 }
 
-void CMarkov::savedata(const string& sfile)
+void CMarkov::savedata()
 {
 
 }
 
-long int CMarkov::readdata(const string& sfile)
+long int CMarkov::readdata()
 {
 	Reindex();
 	count();
@@ -301,8 +301,8 @@ vector<unsigned> CMarkov::partialreverse(unsigned head,
 
 vector<vector<unsigned> > CMarkov::connect(const vector<unsigned>& keywords, 
 										  unsigned method,
-										  long long perm_begin,
-										  long long perm_end)
+										  long perm_begin,
+										  long perm_end)
 {
 	vector<vector<unsigned> > permutations;
 	if (keywords.size() <= 1) { 
@@ -312,7 +312,7 @@ vector<vector<unsigned> > CMarkov::connect(const vector<unsigned>& keywords,
 	vector<unsigned> permutation = keywords;
 	sort(permutation.begin(), permutation.end());
 	if (perm_begin <= 0) permutations.push_back(permutation);
-	long long perm_id = 1;
+	long perm_id = 1;
 	while (std::next_permutation(permutation.begin(), permutation.end()))
 	{
 		if (((perm_end < 0) || (perm_id < perm_end)) && (perm_id > perm_begin))

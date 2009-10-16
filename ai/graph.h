@@ -63,8 +63,8 @@ class CGraph
 		TGraphH::iterator NonExistant();
 		TGraphH::iterator NonExistantBck();
 	
-		void SaveLinks(const string& sfile);
-		long int ReadLinks(const string& sfile);
+		void SaveLinks();
+		long int ReadLinks();
 
 		void BeginTransaction();
 		void EndTransaction();
