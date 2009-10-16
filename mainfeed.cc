@@ -35,7 +35,7 @@
 
 using namespace std;
 
-AI tai("botdata/triplie.db");
+AI* tai; //("botdata/triplie.db");
 
 /* ---------------- */
 
@@ -44,6 +44,7 @@ AI tai("botdata/triplie.db");
  * ************************************* */
 
 int main(int argc, char** argv) {
+	tai = new AI("botdata/triplie.db");
 	setlocale(LC_ALL, "en_US.utf8");
 	if (argc < 2) {
 		cerr << "Usage " << argv[0] << " <regular_expression>" << endl;
@@ -60,7 +61,7 @@ int main(int argc, char** argv) {
 	for (int k = 1; k < argc; ++k) {
 		mstr += argv[k];
 	}
-	tai.UnsafeFastMode();
+	tai->UnsafeFastMode();
 	const boost::regex e(mstr);
 	cout << "Matching " << mstr << endl;
 	boost::smatch what;
@@ -121,8 +122,8 @@ int main(int argc, char** argv) {
 				if (tokens.size() > 0 && 
 					(tokens[0].find_first_of("\001") == string::npos || tokens[0] == "\001action"))
 				{
-   					tai.setdatastring(happen_theline);
-					tai.learndatastring(happen_who, happen_where, happen_time_sec);
+   					tai->setdatastring(happen_theline);
+					tai->learndatastring(happen_who, happen_where, happen_time_sec);
 				}
 				else {
 #ifdef _FEED_DEBUG	
@@ -140,11 +141,11 @@ int main(int argc, char** argv) {
 #endif
 			++ii;
 			if (ii > 50) { ii = 0; cout << " +5K" << endl; }
-			tai.UnsafeQuery("VACUUM; ANALYZE;");
+			tai->UnsafeQuery("VACUUM; ANALYZE;");
 		}
 	}
 	cout << endl << "Done eating." << endl;
-	tai.savealldata();
+	tai->savealldata();
 	cout << "Bye bye." << endl;
     return 0;
 }

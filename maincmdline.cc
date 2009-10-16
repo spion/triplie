@@ -35,7 +35,7 @@
 
 using namespace std;
 
-AI tai("botdata/triplie.db");
+AI* tai; //("botdata/triplie.db");
 
 unsigned long int defmodel=2;
 
@@ -59,6 +59,7 @@ double GetTickCount()
  * ************************************* */
 
 int main() {
+	tai = new AI("botdata/triplie.db");
 	setlocale(LC_ALL, "en_US.utf8");
 	Wildcard wildmatch;
 	string theline, matcher, aireply;
@@ -74,14 +75,14 @@ int main() {
 
 	//* this might need another seed in WIN32 *//
 	srand(time(0));
-	tai.readalldata();
-	cout << tai.countwords() << " words, ";
-	cout << tai.countrels() << " relations known." << endl;
+	tai->readalldata();
+	cout << tai->countwords() << " words, ";
+	cout << tai->countrels() << " relations known." << endl;
     cout << "Waiting for input. Commands: !save, !quit" << endl << endl;
 
 
 	shouldtalk=true;
-	tai.connect_to_workers("workers.dat");
+	tai->connect_to_workers("workers.dat");
 	while (shouldtalk) {
 		getline(cin,theline);
 		lowercase(theline);
@@ -93,7 +94,7 @@ int main() {
                 //commands
                 if (tokens[0] == "!quit") { shouldtalk = false; }
                 else if (tokens[0] == "!save") {
-                	tai.savealldata();
+                	tai->savealldata();
                     cout << "!saved words and relations" << endl << endl;
                 }
 				else if (llen>1) {
@@ -104,24 +105,24 @@ int main() {
 						}
 						if (tokens[1] == "permute") {
 							int permutesize = atol(tokens[2].c_str());
-							tai.setpermute(permutesize);
+							tai->setpermute(permutesize);
 							cout << "!ai permuting " << permutesize << endl << endl;
 						}
 						if (tokens[1] == "permutations")
 						{
 							unsigned pcount = atol(tokens[2].c_str());
 							if (!pcount) { pcount = TRIP_AI_MAXPERMUTATIONS; }
-							tai.maxpermute(pcount);
+							tai->maxpermute(pcount);
 							cout << "Maximum permutations now " << pcount << endl << endl;
 						}
 						if (tokens[1] == "random")
 						{
 							if (tokens[2] == "on") {
-								tai.useRandom = true;
+								tai->useRandom = true;
 								cout << "!Using random." << endl << endl;
 							}
 							else {
-								tai.useRandom = false;
+								tai->useRandom = false;
 								cout << "!Using all." << endl << endl;
 							}
 						}
@@ -132,24 +133,24 @@ int main() {
                 //reply and learn
                 //reply
 				double clockstart = GetTickCount();
-				tai.setdatastring(subtokstring(tokens,0,100," "));
+				tai->setdatastring(subtokstring(tokens,0,100," "));
 				//cout << ((double(clock()) - clockstart)
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();
-				tai.extractkeywords();
+				tai->extractkeywords();
 				//cout << ((double(clock()) - clockstart)
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();
-				tai.expandkeywords();
-				cout << "- " << tai.getdatastring() << endl;
+				tai->expandkeywords();
+				cout << "- " << tai->getdatastring() << endl;
 				//cout << ((double(clock()) - clockstart)
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();
-				tai.connectkeywords(defmodel);
+				tai->connectkeywords(defmodel);
 				//cout << ((double(clock()) - clockstart)
 				//	/ CLOCKS_PER_SEC) * 1000.0 << "\t";
 				//clockstart = clock();
-				aireply=tai.getdatastring("(console)", time(0));
+				aireply=tai->getdatastring("(console)", time(0));
 				double tsec =(GetTickCount() - clockstart);
 				if (aireply == "") { aireply = "*shrug*"; }
 				cout << "> "
@@ -158,8 +159,8 @@ int main() {
 
 
                 //learn
-				tai.setdatastring(theline);
-				tai.learndatastring("(other)", "(console)", time(0));
+				tai->setdatastring(theline);
+				tai->learndatastring("(other)", "(console)", time(0));
 				 // end of learn
 
             } // end of chat
