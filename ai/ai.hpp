@@ -27,118 +27,164 @@
 
 #include <deque>
 
-#define TRIP_MAXKEY_DEFAULT 8
+#define TRIP_MAXKEY_DEFAULT 10
 
 
 using namespace std;
 
 class AI {
-	private:
-		CDictionary dictionary;
-		CMarkov markov;
-		CGraph vertical;
-		SQLite db;
-		
-		vector<TriplieMasterProto> slaves;
-		
-		bool Distributed; 
+private:
+    CDictionary dictionary;
+    CMarkov markov;
+    CGraph vertical;
+    SQLite db;
 
-		//Linguistics model.
+    vector<TriplieMasterProto> slaves;
 
-		unsigned long int relcount;
+    bool Distributed;
 
-		vector<unsigned> keywords;
-		vector<unsigned> my_dellayed_context;
-		
-		vector<vector<unsigned> > shuffles;
+    //Linguistics model.
 
-		list<float> scores;
+    unsigned long int relcount;
+
+    vector<unsigned> keywords;
+    vector<unsigned> oldKeywords;
+    
+    vector<unsigned> my_dellayed_context;
+
+    vector<vector<unsigned> > shuffles;
+
+    list<float> scores;
 
 
-		//Thinking model - Vertical relations (context)
-		map<string, CContextQueue> context;
-		map<string, bool> conNicks;
-		unsigned vertCount;
+    //Thinking model - Vertical relations (context)
+    map<string, CContextQueue> context;
+    map<string, bool> conNicks;
+    unsigned vertCount;
 
-		//keyword functions
-		float scorekeywords(const map<unsigned, bool>& keymap);
-		float scorekeyword(unsigned wrd);
-		float scorekeyword_bycount(unsigned wcnt);
-	
-		//debug functions
-		void outvector(vector<unsigned>& v);
+    //keyword functions
+    float scorekeywords(const map<unsigned, bool>& keymap);
+    float scorekeyword(unsigned wrd);
+    float scorekeyword_bycount(unsigned wcnt);
+    float mutualInformationToRequest(unsigned wrd);
+    //debug functions
+    void outvector(vector<unsigned>& v);
 
-		//connection methods
-		void buildcleanup();
+    //connection methods
+    void buildcleanup();
 
-		//shuffle functions
-		void generateshuffles();
-		void scoreshuffles();
-		void keywordsbestshuffle();
-		int aipermute;
-		unsigned maxpermutecount;
-	public:
-		AI(string dbf);
-		void CloseDB() { db.CloseDB(); }
-		void OpenDB() { db.OpenDB(); }
-		void BeginTransaction() { db.BeginTransaction(); }
-		void EndTransaction() { db.EndTransaction(); }
-		void UnsafeFastMode() { db.Query("PRAGMA journal_mode = MEMORY"); }
-		void UnsafeQuery(const string& s) { db.Query(s); }
-		unsigned TRIP_MAXKEY;
-		long int countrels();
-		unsigned countwords();
-		unsigned countvrels();
-	
-		void readalldata();
-		void savealldata();
-		void prune_vertical_nonkeywords();
+    //shuffle functions
+    void generateshuffles();
+    void scoreshuffles();
+    void keywordsbestshuffle();
+    int aipermute;
+    unsigned maxpermutecount;
+public:
+    AI(string dbf);
 
-		void setdatastring(const string& datastring);
-		void learndatastring(const string& bywho, const string& where, const time_t& when);
-		const string getdatastring(const string& where, const time_t& when);
-		const string getdatastring();
+    void CloseDB() {
+        db.CloseDB();
+    }
 
-		void extractkeywords();
-		void expandkeywords();
-		void connectkeywords(int method);
-		void setpermute(int permute) { TRIP_MAXKEY = permute; }
-		void maxpermute(unsigned num) { maxpermutecount = num; }
-		bool useRandom;
+    void OpenDB() {
+        db.OpenDB();
+    }
 
-	// remote worker functions
-		const string getnumericdatastring();
-		void setnumericdatastring(const vector<string>&);
-		void learnonlymarkov();
+    void BeginTransaction() {
+        db.BeginTransaction();
+    }
 
-	// distributed support functions
-		void BeginMarkovTransaction() { markov.BeginTransaction(); }
-		void EndMarkovTransaction() { markov.EndTransaction(); }
-		void BeginDictionaryTransaction() { dictionary.BeginTransaction(); }
-		void EndDictionaryTransaction() { dictionary.EndTransaction(); }
-		
-		void BeginContextTransaction() { vertical.BeginTransaction(); }
-		void EndContextTransaction() { vertical.EndTransaction(); }
-		
+    void EndTransaction() {
+        db.EndTransaction();
+    }
 
-		void InjectWord(unsigned w, unsigned val) { 
-			dictionary.AddWord(w, val, false);
-		}
-		void InjectMarkov(const string& s)
-		{
-			markov.AddRow(s);
-		}
+    void UnsafeFastMode() {
+        db.Query("PRAGMA journal_mode = MEMORY");
+    }
 
-	// Bootstraps a clean worker.
-		void BootstrapDB() { dictionary.ClearAll(); markov.ClearAll(); }
+    void UnsafeQuery(const string& s) {
+        db.Query(s);
+    }
+    unsigned TRIP_MAXKEY;
+    long int countrels();
+    unsigned countwords();
+    unsigned countvrels();
 
-	// local master stub functions
-		void SendLearnKeywords();
-		vector<vector<unsigned> > GetRepliesFromAll();
+    void readalldata();
+    void savealldata();
+    void prune_vertical_nonkeywords();
 
-		void SendAllSlavesAndWait(const string&);
-		void connect_to_workers(string file);
-	
+    void setdatastring(const string& datastring);
+    void learndatastring(const string& bywho, const string& where, const time_t& when);
+    const string getdatastring(const string& where, const time_t& when);
+    const string getdatastring();
+
+    void extractkeywords();
+    void expandkeywords();
+    void connectkeywords(int method);
+
+    void setpermute(int permute) {
+        TRIP_MAXKEY = permute;
+    }
+
+    void maxpermute(unsigned num) {
+        maxpermutecount = num;
+    }
+    bool useRandom;
+
+    // remote worker functions
+    const string getnumericdatastring();
+    void setnumericdatastring(const vector<string>&);
+    void learnonlymarkov();
+
+    // distributed support functions
+
+    void BeginMarkovTransaction() {
+        markov.BeginTransaction();
+    }
+
+    void EndMarkovTransaction() {
+        markov.EndTransaction();
+    }
+
+    void BeginDictionaryTransaction() {
+        dictionary.BeginTransaction();
+    }
+
+    void EndDictionaryTransaction() {
+        dictionary.EndTransaction();
+    }
+
+    void BeginContextTransaction() {
+        vertical.BeginTransaction();
+    }
+
+    void EndContextTransaction() {
+        vertical.EndTransaction();
+    }
+
+    void InjectWord(unsigned w, unsigned val) {
+        dictionary.AddWord(w, val, false);
+    }
+
+    void InjectMarkov(const string& s) {
+        markov.AddRow(s);
+    }
+
+    // Bootstraps a clean worker.
+
+    void BootstrapDB() {
+        dictionary.ClearAll();
+        markov.ClearAll();
+    }
+
+    // local master stub functions
+    void SendLearnKeywords();
+    vector<vector<unsigned> > GetRepliesFromAll();
+
+    void SendAllSlavesAndWait(const string&);
+    void connect_to_workers(string file);
+
 };
 
 #endif

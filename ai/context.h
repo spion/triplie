@@ -30,61 +30,65 @@
 #define TRIP_CONTEXT_TIMEOUT 600 // 10 minutes.
 //#define TRIP_MAXKEY 6
 
-
-
-template<typename T> T abs(T n) { return n<0?0-n:n; }
+template<typename T> T abs(T n) {
+    return n < 0 ? 0 - n : n;
+}
 
 using std::vector;
 using std::string;
 using std::deque;
 using std::map;
 
-struct CContext
-{
-	vector<unsigned> keywords;
-	string nick;
-	time_t addtime;
+struct CContext {
+    vector<unsigned> keywords;
+    string nick;
+    time_t addtime;
 };
 
+class CMContext {
+public:
+    unsigned wrd;
+    double cnt;
 
-class CMContext
-{
-	public:
-		unsigned wrd;
-		double   cnt;
-		bool operator > (const CMContext& x1) const
-		{
-			return (bool)(this->cnt > x1.cnt);
-		}
-		bool operator < (const CMContext& x1) const
-		{
-			return (bool)(this->cnt < x1.cnt);
-		}
+    bool operator>(const CMContext& x1) const {
+        return (bool)(this->cnt > x1.cnt);
+    }
+
+    bool operator<(const CMContext& x1) const {
+        return (bool)(this->cnt < x1.cnt);
+    }
 };
 
-class CContextQueue
-{
-	private:
-		deque<CContext> context;
-		map<unsigned, map<unsigned, double> > conLinks;
-		map<string, bool> areNicks;
-		unsigned conMax; // Thinking context maximum.
-		unsigned conMaxLearn; // Learning context maximum
-		unsigned conCount;
-		CGraph * vertical;
-		CDictionary * dictionary;
-		//context functions
-		void relink();
-	public:
-		vector<unsigned> my_dellayed_context;
-		time_t my_dellayed_context_time;
-		CContextQueue() {
-			conMax=1;
-			conCount=0;
-		}
-		void setContextDepth(int contextDepth) { conMax = contextDepth; } 
-		bool isNick(const string& n);
-		void setVertical(CGraph * v, CDictionary * d) { vertical = v; dictionary = d;  }
-		void push(const string& bywho, vector<unsigned>& keywords, const time_t& when);
-		void learn();
+class CContextQueue {
+private:
+    deque<CContext> context;
+    map<unsigned, map<unsigned, double> > conLinks;
+    map<string, bool> areNicks;
+    unsigned conMax; // Thinking context maximum.
+    unsigned conMaxLearn; // Learning context maximum
+    unsigned conCount;
+    CGraph * vertical;
+    CDictionary * dictionary;
+    //context functions
+    void relink();
+public:
+    vector<unsigned> my_dellayed_context;
+    time_t my_dellayed_context_time;
+
+    CContextQueue() {
+        conMax = 1;
+        conCount = 0;
+    }
+
+    void setContextDepth(int contextDepth) {
+        conMax = contextDepth;
+    }
+    bool isNick(const string& n);
+
+    void setVertical(CGraph * v, CDictionary * d) {
+        vertical = v;
+        dictionary = d;
+    }
+    void push(const string& bywho, vector<unsigned>& keywords, const time_t& when);
+    void learn();
 };

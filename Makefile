@@ -36,7 +36,7 @@ cmdtriplie: ai protocol maincmdline.o
 	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o cmdtriplie maincmdline.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
 
 feedtriplie: ai protocol mainfeed.o
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -lboost_regex -o feedtriplie mainfeed.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -lboost_regex-mt -o feedtriplie mainfeed.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
 
 worktriplie: ai protocol mainworker.o
 	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o worktriplie mainworker.o protocol/triproto-lib.a ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}

@@ -31,48 +31,57 @@ using std::vector;
 using std::string;
 
 #define MARKOV_MAXORDER 6
-#define TRIP_AI_MAXPERMUTATIONS 100
+#define TRIP_AI_MAXPERMUTATIONS 250
 
-class CMarkov
-{
-	private:
-		SQLite* db;
-		bool InsideTransaction;
-		unsigned order; 			//order of model
-		unsigned internalCount;
-		bool CheckIfLinked(vector<unsigned>& words);
-		vector<unsigned> partial(const vector<unsigned>& head, 
-								unsigned end, unsigned method=2);
-		vector<unsigned> partialreverse(unsigned head, 
-								unsigned end, unsigned method=2);
-		void all(vector<vector<unsigned> >& permutations, const unsigned& method);
-	public:
-		void CMarkovInit(SQLite* dbf);
-		~CMarkov() { }
-		void CloseDB() { db->CloseDB(); }
-		void OpenDB() { db->OpenDB(); }
-		void BeginTransaction();
-		void EndTransaction();
-		void setOrder() { }
-		void remember(vector<unsigned>& sentence);
-	
-		vector<vector<unsigned> >
-			connect (const vector<unsigned>& keywords, unsigned method=0, 
-					 long perm_begin = -1, long perm_end = -1);
-		vector< vector<unsigned> >
-			dconnect(const vector<unsigned>& keywords, unsigned method=0, 
-						unsigned MAXPERMS = TRIP_AI_MAXPERMUTATIONS);
-	
-		void savedata();
-		long readdata();
-		unsigned count();// { return internalCount; }
-		void ClearAll();
-		void AddRow(const string&);
-		
-		unsigned LinkStrength(unsigned x, unsigned y, unsigned order = 1);
-		unsigned LinkStrength(unsigned x, bool forward, unsigned order = 1);
-		
-		void Reindex();
+class CMarkov {
+private:
+    SQLite* db;
+    bool InsideTransaction;
+    unsigned order; //order of model
+    unsigned internalCount;
+    bool CheckIfLinked(vector<unsigned>& words);
+    vector<unsigned> partial(const vector<unsigned>& head,
+            unsigned end, unsigned method = 2);
+    vector<unsigned> partialreverse(unsigned head,
+            unsigned end, unsigned method = 2);
+    void all(vector<vector<unsigned> >& permutations, const unsigned& method);
+public:
+    void CMarkovInit(SQLite* dbf);
+
+    ~CMarkov() {
+    }
+
+    void CloseDB() {
+        db->CloseDB();
+    }
+
+    void OpenDB() {
+        db->OpenDB();
+    }
+    void BeginTransaction();
+    void EndTransaction();
+
+    void setOrder() {
+    }
+    void remember(vector<unsigned>& sentence);
+
+    vector<vector<unsigned> >
+    connect(const vector<unsigned>& keywords, unsigned method = 0,
+            long perm_begin = -1, long perm_end = -1);
+    vector< vector<unsigned> >
+    dconnect(const vector<unsigned>& keywords, unsigned method = 0,
+            unsigned MAXPERMS = TRIP_AI_MAXPERMUTATIONS);
+
+    void savedata();
+    long readdata();
+    unsigned count(); // { return internalCount; }
+    void ClearAll();
+    void AddRow(const string&);
+
+    unsigned LinkStrength(unsigned x, unsigned y, unsigned order = 1);
+    unsigned LinkStrength(unsigned x, bool forward, unsigned order = 1);
+
+    void Reindex();
 
 };
 

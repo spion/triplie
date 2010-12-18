@@ -29,48 +29,54 @@
 
 #define MAX_WSIZE 60
 
-#define LEVEN_MAGIC_LIMIT 0.13
+#define LEVEN_MAGIC_LIMIT 0.1
 #define LEVEN_IGNORE_WORDSIZE 5
 
 using std::string;
 using std::map;
 using std::pair;
 
+class CDictionary {
+private:
+    SQLite* db;
+    //map<string, unsigned> dict;
+    //string backdict[TRIP_MAXSIZE];
+    //unsigned counter;
+    //unsigned counters[TRIP_MAXSIZE];
+    unsigned long totaloccurances;
+    bool InsideTransaction;
+public:
+    void CDictionaryInit(SQLite* dbf);
 
-class CDictionary
-{
-	private:
-		SQLite* db;
-		//map<string, unsigned> dict;
-		//string backdict[TRIP_MAXSIZE];
-		//unsigned counter;
-		//unsigned counters[TRIP_MAXSIZE];
-		unsigned long totaloccurances;
-		bool InsideTransaction;
-	public:
-		void CDictionaryInit(SQLite* dbf);
-		void CloseDB() { db->CloseDB(); }
-		void OpenDB() { db->OpenDB(); }
-		void clear() { }
-		const string GetWord(unsigned key); 
-		unsigned GetKey(const string& word);
-		void AddWord(const string& word, const unsigned& howmany = 1);
-		void AddWord(const unsigned& word, const unsigned& howmany = 1, bool noInject = true) ;
-		unsigned count();
-		unsigned int readwords();
-		void savewords();
-	
-		unsigned occurances(unsigned wrd);
-		unsigned occurances(const string& wrd);
-		unsigned occurances();
+    void CloseDB() {
+        db->CloseDB();
+    }
 
-		map< unsigned, map<unsigned,pair<string, double> >  >
-			FindSimilarWords(const vector<unsigned>& wordlist);
+    void OpenDB() {
+        db->OpenDB();
+    }
 
-		void BeginTransaction();
-		void EndTransaction();
-		void ClearAll();
-		
+    void clear() {
+    }
+    const string GetWord(unsigned key);
+    unsigned GetKey(const string& word);
+    void AddWord(const string& word, const unsigned& howmany = 1);
+    void AddWord(const unsigned& word, const unsigned& howmany = 1, bool noInject = true);
+    unsigned count();
+    unsigned int readwords();
+    void savewords();
+
+    unsigned occurances(unsigned wrd);
+    unsigned occurances(const string& wrd);
+    unsigned occurances();
+
+    map< unsigned, map<unsigned, pair<string, double> > >
+    FindSimilarWords(const vector<unsigned>& wordlist);
+
+    void BeginTransaction();
+    void EndTransaction();
+    void ClearAll();
+
 };
 
 double leven(string s, string t);

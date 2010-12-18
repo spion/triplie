@@ -35,39 +35,46 @@ using std::endl;
 typedef std::map<unsigned, double > TNodeLinks;
 typedef std::map<unsigned, TNodeLinks > TGraphH;
 
-class CGraph
-{
-	private:
-		string table_name;
-		SQLite* db;
-		bool InsideTransaction;
-	public:
-		void CloseDB() { db->CloseDB(); }
-		void OpenDB() { db->OpenDB(); }
-		unsigned long count;
-	
-		void CGraphInit(SQLite* dbf, string tblname);
-		void AddLink(unsigned x, unsigned y, double val = 0.0);
-		void IncLink(unsigned x, unsigned y, double val = 1.0);
-		void DelLink(unsigned x, unsigned y);
-		double CheckLink(unsigned x, unsigned y);
-	
-		unsigned CountLinks(unsigned x);
-		double CountLinksStrength(unsigned x);
-		unsigned CountFwdLinks(unsigned x);
-		double CountFwdLinksStrength(unsigned x);
-		unsigned CountBckLinks(unsigned x);
-		double CountBckLinksStrength(unsigned x);
-		TNodeLinks GetFwdLinks(unsigned node, unsigned maxLinks = 0);
-		TNodeLinks GetBckLinks(unsigned node, unsigned maxLinks = 0);
-		TGraphH::iterator NonExistant();
-		TGraphH::iterator NonExistantBck();
-	
-		void SaveLinks();
-		long int ReadLinks();
+class CGraph {
+private:
+    string table_name;
+    SQLite* db;
+    bool InsideTransaction;
+    double totalCount;
+public:
 
-		void BeginTransaction();
-		void EndTransaction();
+    void CloseDB() {
+        db->CloseDB();
+    }
+
+    void OpenDB() {
+        db->OpenDB();
+    }
+    unsigned long count;
+
+    double getTotalCount();
+    void CGraphInit(SQLite* dbf, string tblname);
+    void AddLink(unsigned x, unsigned y, double val = 0.0);
+    void IncLink(unsigned x, unsigned y, double val = 1.0);
+    void DelLink(unsigned x, unsigned y);
+    double CheckLink(unsigned x, unsigned y);
+
+    unsigned CountLinks(unsigned x);
+    double CountLinksStrength(unsigned x);
+    unsigned CountFwdLinks(unsigned x);
+    double CountFwdLinksStrength(unsigned x);
+    unsigned CountBckLinks(unsigned x);
+    double CountBckLinksStrength(unsigned x);
+    TNodeLinks GetFwdLinks(unsigned node, unsigned maxLinks = 0);
+    TNodeLinks GetBckLinks(unsigned node, unsigned maxLinks = 0);
+    TGraphH::iterator NonExistant();
+    TGraphH::iterator NonExistantBck();
+
+    void SaveLinks();
+    long int ReadLinks();
+
+    void BeginTransaction();
+    void EndTransaction();
 };
 
 #endif

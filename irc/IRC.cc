@@ -342,6 +342,9 @@ int IRC::is_voice(const char* channel, const char* nick)
 
 void IRC::parse_irc_reply(char* data)
 {
+	#ifdef TRIP_DEBUG
+	printf("Parse IRC reply\n");
+	#endif
 	char* hostd;
 	char* cmd;
 	char* params;
@@ -386,6 +389,10 @@ void IRC::parse_irc_reply(char* data)
 			}
 		}
 
+
+		#ifdef TRIP_DEBUG
+			printf("Analyzing command\n");
+		#endif
 		if (!strcmp(cmd, "JOIN"))
 		{
 			cup=chan_users;
@@ -758,7 +765,13 @@ void IRC::parse_irc_reply(char* data)
 				strcpy(cur_nick, params);
 			}
 		}
+		#ifdef TRIP_DEBUG
+			printf("Calling hoook\n");
+		#endif
 		call_hook(cmd, params, &hostd_tmp);
+		#ifdef TRIP_DEBUG
+			printf("Hook call success.\n");
+		#endif
 	}
 	else
 	{
@@ -788,6 +801,9 @@ void IRC::parse_irc_reply(char* data)
 			call_hook(cmd, params, &hostd_tmp);
 		}
 	}
+	#ifdef TRIP_DEBUG
+	printf("End parsing IRC reply\n");
+	#endif
 }
 
 void IRC::call_hook(char* irc_command, char* params, irc_reply_data* hostd)

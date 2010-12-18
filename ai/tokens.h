@@ -22,10 +22,10 @@
 #ifndef _TOKENS_H
 #define _TOKENS_H
 
-/*  A bit unclean. Besides being a token-functions file this also
-  	contains some standard math functions that are in use,
-	and some types that hold our data.
- */
+        /*  A bit unclean. Besides being a token-functions file this also
+                contains some standard math functions that are in use,
+                and some types that hold our data.
+         */
 
 #include <string>
 #include <algorithm>
@@ -36,34 +36,34 @@
 #include <math.h>
 #include <ctime>
 
-using namespace std;
+        using namespace std;
 
 struct CAdminList {
-	vector<string> userhosts;
+    vector<string> userhosts;
 };
 
-double uniform_deviate (int seed);
+double uniform_deviate(int seed);
 
 void tokenize(const string& str,
-                      vector<string>& tokens,
-                      const string& delimiters = " ");
+        vector<string>& tokens,
+        const string& delimiters = " ");
 
 void tokenizelossles(const string& str,
-                      vector<string>& tokens,
-                      const string& delimiters = " ");
+        vector<string>& tokens,
+        const string& delimiters = " ");
 
 
-string gettok(const std::string& str, long int n ,
-              const std::string& delimiters = " ");
+string gettok(const std::string& str, long int n,
+        const std::string& delimiters = " ");
 
 long int numtok(const std::string& str,
-              const std::string& delimiters = " ");
+        const std::string& delimiters = " ");
 
 long int findtok(const std::string& str, const std::string& token,
-              const std::string& delimiters = " ");
+        const std::string& delimiters = " ");
 
-string subtokstring(const vector<string>& tokens,unsigned int n1, 
-					unsigned int n2, const string& c);
+string subtokstring(const vector<string>& tokens, unsigned int n1,
+        unsigned int n2, const string& c);
 
 
 

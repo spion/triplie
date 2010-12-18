@@ -11,7 +11,7 @@ template <typename From, typename To> To convert(From f) { To t; stringstream s;
 int main(int argc, char** argv)
 {
 	SQLite db("triplie.db");
-	db.QueryExec("CREATE TABLE if not exists markov (id1, id2, id3, id4, id5, id6, val, PRIMARY KEY (id1,id2,id3,id4,id5,id6));");
+	db.QueryExec("CREATE TABLE if not exists markov (id1, id2, id3, id4, id5, id6, val, PRIMARY KEY  (id1,id2,id3,id4,id5,id6))");
 	db.QueryExec("CREATE TABLE if not exists dict (id INTEGER PRIMARY KEY, word, wcount);");
 	db.QueryExec("CREATE TABLE if not exists assoc (id1, id2, val, PRIMARY KEY (id1, id2));");
 	//db.QueryExec("DELETE FROM markov; DELETE FROM dict; DELETE FROM assoc; VACUUM;");
@@ -80,16 +80,10 @@ int main(int argc, char** argv)
 		if (k%1000 == 0) cout << k << " inserts in dictionary table so far..." << endl;
 	}
 	db.QueryExec("END;");	
-	cout << "Creating word index...." << endl;
 	db.QueryExec("CREATE INDEX IF NOT EXISTS wordindex ON dict (word);");
 	if (argc < 2)
 	{
-		cout << "Creating assoc one index.... not needed" << endl;
-		//db.QueryExec("CREATE INDEX if not exists associndex_one ON assoc(id1);");
-		cout << "Creating assoc two index.... not needed" << endl;
-		//db.QueryExec("CREATE INDEX if not exists associndex_two ON assoc(id2);");
 		cout << "Creating all markov indeces...." << endl;
-		//db.QueryExec("create index if not exists markov_i_1_2 on markov(id1,id2);");
 		db.QueryExec("create index if not exists markov_i_2_3 on markov(id2,id3);");
 	}
 	else
