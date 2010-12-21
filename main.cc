@@ -16,7 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#include <sys/stat.h>
 #include <sys/types.h>
+
 #include <unistd.h>
 #include <stdio.h>
 #include <math.h>
@@ -62,14 +64,14 @@ int sleepmin, sleepmax;
 /* ---------------- */
 int procprivm(char* params, irc_reply_data* hostd, void* conn);
 int end_of_motd(char* params, irc_reply_data* hostd, void* conn);
-void forktobg();
+void forktobg(string);
 void readadmins();
 void readignores();
 int admin_auth(const std::string& strhost);
 int check_ignore(const std::string& strhost);
 
 void cmd_thread(void* irc_conn);
-int readsettings();
+int readsettings(string);
 void signal_handler(int sig);
 
 /* ****************************************
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
     cout << "Debug mode enabled." << endl;
 #endif
     cout << "Triple AI bot started" << endl
-            << "Admin database@'admins.dat' ai db@'botdata/triplie.db' << endl;
+            << "Admin database@'admins.dat' ai db@'botdata/triplie.db'" << endl;
 
             readsettings(confFile);
     cout << "Server " << server << ":" << defport << endl;
@@ -126,7 +128,7 @@ int main(int argc, char** argv) {
 #else
     /* fork to background and prevent running twice */
     tai->CloseDB();
-    forktobg();
+    forktobg(confFile);
     tai->OpenDB();
 #endif
     aimodel = 2;
