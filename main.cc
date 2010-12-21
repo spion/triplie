@@ -50,7 +50,7 @@ CAdminList ignores;
 unsigned int aimodel;
 unsigned int aipermute;
 
-string server, defnick, defuser, defname, defchar;
+string server, defnick, defuser, defname, defchar, serverpass = "";
 vector<string> defchans;
 unsigned int defport;
 bool shouldreconnect;
@@ -87,7 +87,11 @@ void signal_handler(int sig) {
     }
 }
 
-int main() {
+int main(int argc, char** argv) {
+    string confFile = "triplie.conf";
+    if (argc > 1) {
+        confFile = argv[1];
+    }
     tai = new AI("botdata/triplie.db");
     conn = new IRC();
     setlocale(LC_ALL, "en_US.utf8");
@@ -101,11 +105,12 @@ int main() {
     cout << "Debug mode enabled." << endl;
 #endif
     cout << "Triple AI bot started" << endl
-            << "Admin database@'admins.dat' words@'word.dat' rels@'rels.dat'" << endl;
+            << "Admin database@'admins.dat' ai db@'botdata/triplie.db' << endl;
 
-    readsettings();
+            readsettings(confFile);
     cout << "Server " << server << ":" << defport << endl;
     cout << "Nickname: " << defnick << " Ident: " << defuser << endl;
+
     //* this might need another seed in WIN32 *//
     srand(time(0));
 
@@ -148,7 +153,7 @@ int main() {
 #ifdef TRIP_DEBUG
             cout << "Reconnecting..." << endl;
 #endif
-            conn->start(server.c_str(), defport, defnick.c_str(), defuser.c_str(), defname.c_str(), "");
+            conn->start(server.c_str(), defport, defnick.c_str(), defuser.c_str(), defname.c_str(), serverpass.c_str());
         }
     }
 
@@ -160,7 +165,7 @@ int main() {
     return 0;
 }
 
-void forktobg() {
+void forktobg(string configFile) {
     int i;
     i = fork();
     if (i < 0) exit(1); /* fork error */
@@ -171,14 +176,18 @@ void forktobg() {
     int k = dup(i); /* stdout */
     k = dup(i); /* stderr */
 #ifdef linux
+
     int lfp;
     char fstr[10];
     umask(027);
-    lfp = open("triplie.lock", O_RDWR | O_CREAT, 0640);
+
+    string lockFile = configFile + ".lock";
+    lfp = open(lockFile.c_str(), O_RDWR | O_CREAT, 0640);
     if (lfp < 0) exit(1);
     if (lockf(lfp, F_TLOCK, 0) < 0) exit(0);
     sprintf(fstr, "%d\n", getpid());
     k = write(lfp, fstr, strlen(fstr));
+
 #endif
     signal(SIGCHLD, SIG_IGN); /* ignore child */
     signal(SIGTSTP, SIG_IGN); /* ignore tty signals */
@@ -289,12 +298,13 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
                     rawcmd = "Quit";
                 }
                 irc_conn->quit((string(":") + rawcmd).c_str());
-			} else if (tokens[0] == dc + "say") {
-				if (x >= 2) {
-					rawcmd = "PRIVMSG " + msgtarget + subtokstring(tokens,1,100," ");
-					irc_conn->raw(rawcmd.c_str());
-				}
-				else { rawcmd = ""; }
+            } else if (tokens[0] == dc + "say") {
+                if (x >= 2) {
+                    rawcmd = "PRIVMSG " + msgtarget + subtokstring(tokens, 1, 100, " ");
+                    irc_conn->raw(rawcmd.c_str());
+                } else {
+                    rawcmd = "";
+                }
             } else if (tokens[0] == dc + "die") {
                 if (x >= 2) {
                     rawcmd = subtokstring(tokens, 1, 100, " ");
@@ -540,8 +550,8 @@ int check_ignore(const std::string& strhost) {
 
 }
 
-int readsettings() {
-    ifstream setts("triplie.conf");
+int readsettings(string confFile) {
+    ifstream setts(confFile.c_str());
     std::string strsetting;
     defport = 6666;
     while (!(setts.eof())) {
@@ -560,8 +570,9 @@ int readsettings() {
             //setts >> defchan >> keychan;
         } else if (strsetting == "char") {
             setts >> defchar;
-        }
-        if (strsetting == "sleep") {
+        } else if (strsetting == "pass") {
+            setts >> serverpass;
+        } else if (strsetting == "sleep") {
             setts >> sleepmin >> sleepmax;
         }
     }
