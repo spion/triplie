@@ -31,7 +31,7 @@ using namespace std;
 #define _SQLITE_CLASS_H
 
 #ifndef SQLITE_DEFAULT_TIMEOUT
-#define SQLITE_DEFAULT_TIMEOUT 10000
+#define SQLITE_DEFAULT_TIMEOUT 120000
 #endif
 
 using std::string;

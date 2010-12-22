@@ -302,7 +302,7 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
                 irc_conn->quit((string(":") + rawcmd).c_str());
             } else if (tokens[0] == dc + "say") {
                 if (x >= 2) {
-                    rawcmd = "PRIVMSG " + msgtarget + subtokstring(tokens, 1, 100, " ");
+                    rawcmd = "PRIVMSG " + msgtarget + " :" + subtokstring(tokens, 1, 100, " ");
                     irc_conn->raw(rawcmd.c_str());
                 } else {
                     rawcmd = "";
