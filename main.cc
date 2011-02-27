@@ -307,6 +307,13 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
                 } else {
                     rawcmd = "";
                 }
+            } else if (tokens[0] == dc + "msg") {
+                if (x >= 3) {
+                    rawcmd = "PRIVMSG " + tokens[1] + " :" + subtokstring(tokens, 2, 100, " ");
+                    irc_conn->raw(rawcmd.c_str());
+                } else {
+                    rawcmd = "";
+                }
             } else if (tokens[0] == dc + "die") {
                 if (x >= 2) {
                     rawcmd = subtokstring(tokens, 1, 100, " ");
