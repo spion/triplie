@@ -1,4 +1,4 @@
-CXXFLAGS=-g -DTRIP_DEBUG
+CXXFLAGS=-O2 -pipe
 ECXX=-Wall -Wextra -pedantic
 C=gcc
 LIBVAR=-L/usr/local/lib -lpthread -lsqlite3
