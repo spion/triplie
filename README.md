@@ -70,7 +70,7 @@ is installed on the machine. Same rules as for nick apply.
 try to join these channels first. The channel names are separated with space.
 
 6. Sleep specifies minimum/maximum pause time between request and answer,
-in seconds. For example
+in seconds. For example:
 
     sleep 2 7
 
