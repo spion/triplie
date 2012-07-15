@@ -52,36 +52,38 @@ First thing to edit is triplie.conf. Here is what it must contain:
     sleep min max
     char !
 
-1) The first line specifies the server here. This line MUST contain 3 words:
+1. The first line specifies the server here. This line MUST contain 3 words:
 server hostname portnumber
 They must all be correct. Otherwise the bot will not connect to the
 server.
 
-2) The second line is in the format "nick yourbotsnick" If the nickname is in
+2. The second line is in the format "nick yourbotsnick" If the nickname is in
 use, this simple version will not try another nick. Also, the nickname
 must be lowercase, letters/numbers only.
 
-3) The third line is what will appear as the username of the bot if no identd
+3. The third line is what will appear as the username of the bot if no identd
 is installed on the machine. Same rules as for nick apply.
 
-4) The fourth line specifies the real name of the bot.
+4. The fourth line specifies the real name of the bot.
 
-5) The fifth line specifies the default channels. When run, triplie will ALWAYS
+5. The fifth line specifies the default channels. When run, triplie will ALWAYS
 try to join these channels first. The channel names are separated with space.
 
-6) Sleep specifies minimum/maximum pause time between request and answer,
+6. Sleep specifies minimum/maximum pause time between request and answer,
 in seconds. For example
-sleep 2 7
+
+    sleep 2 7
+
 will make the bot wait between 2 and 7 seconds before answering. This is
 used to prevent people from flooding the bot.
 
-7) char specifies the command char prefix. 
+7. char specifies the command char prefix. 
 
 Note that these lines can be handled in any order, but it is important that
 there are no missing parameters in any of them. Also, all the starting words
 of those lines MUST be lowercase!
 
-(B) admins.dat / ignores.dat
+admins.dat / ignores.dat
 --------------------------
 
 admins.dat is a simple file which lists all nick!user@hosts with admin access.
@@ -104,7 +106,7 @@ be a hostmask like the 2 above. You can also have only 1 line.
 Obviously, ignores.dat lists ignore hosts. They are in the same format.
 Its recommended that triplie ignores other triplies
 
-(C) triplie.db
+triplie.db
 ---------------
 This is not a configuration file. Its best left intact.
 
