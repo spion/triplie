@@ -13,7 +13,7 @@ To respond to a user, triplie extracts keywords from the user's text, finds thei
 
 For more information on installing and configuring read below or see the README wiki page.
 
-You can join the project's [IRC channel too](irc://irc.freenode.net/#triplie)
+You can join the project's IRC channel too: #triplie on irc.freenode.net
 
 
 COMPILE
