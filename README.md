@@ -21,7 +21,7 @@ COMPILE
 
 To compile, unpack and type
 
-make
+    make
 
 The generated binaries will be called "triplie" and "cmdtriplie"
 triplie is the IRC version and cmdtriplie is the command line version.
@@ -36,7 +36,7 @@ CONFIGURATION
 If running the bot for the first time (there is no database file)
 you should type
 
-make bootstrap
+    make bootstrap
 
 to create the initial database file in botdata/triplie.db
 
