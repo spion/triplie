@@ -175,8 +175,8 @@ void forktobg(string configFile) {
     setsid();
     for (i = getdtablesize(); i >= 0; --i) close(i);
     i = open("/dev/null", O_RDWR); /* open stdin */
-    int k = dup(i); /* stdout */
-    k = dup(i); /* stderr */
+    if (dup(i) < 0) exit(1); /* stdout */    
+    if (dup(i) < 0) exit(1); /* stderr */
 #ifdef linux
 
     int lfp;
@@ -188,7 +188,7 @@ void forktobg(string configFile) {
     if (lfp < 0) exit(1);
     if (lockf(lfp, F_TLOCK, 0) < 0) exit(0);
     sprintf(fstr, "%d\n", getpid());
-    k = write(lfp, fstr, strlen(fstr));
+    if (write(lfp, fstr, strlen(fstr)) < 0) exit(1);
 
 #endif
     signal(SIGCHLD, SIG_IGN); /* ignore child */

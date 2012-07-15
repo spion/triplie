@@ -181,7 +181,7 @@ void AI::learndatastring(const string& bywho, const string& where, const time_t&
 }
 
 void AI::expandkeywords() {
-    map<unsigned, double> kcontext;
+    map<unsigned, double> kcontext, kcount;
     map<unsigned, double>::iterator z;
     TNodeLinks::iterator reply_keywrd;
     vector<unsigned>::iterator keywrd;
@@ -222,14 +222,17 @@ void AI::expandkeywords() {
                     double candidate_score;
                     if ((candidate_score = scorekeyword_bycount(reply_keywrd->first) > 0.0)) {
                         double co_occur = reply_keywrd->second;
-                        double jointProbability = co_occur / dictionary.occurances();
-                        double reqProbablity = req_keywrd_occurances / vertical.getTotalCount();
-                        double repProbability = reply_keywrd_occurances / vertical.getTotalCount();
+                        /*double jointProbability = co_occur / vertical.getTotalCount();
+                        double reqProbablity = req_keywrd_occurances / dictionary.occurances();
+                        double repProbability = reply_keywrd_occurances / dictionary.occurances();
                         double mutualInformation =
                                 jointProbability * log(jointProbability /
                                 (reqProbablity * repProbability)
-                                );
+                                );*/
+                        double mutualInformation = (co_occur * co_occur)
+                            / (req_keywrd_occurances * reply_keywrd_occurances);
                         kcontext[reply_keywrd->first] += mutualInformation;
+                        kcount[reply_keywrd->first] += 1;
 
 
                     }
@@ -239,8 +242,9 @@ void AI::expandkeywords() {
     }
     CMContext element;
     for (z = kcontext.begin(); z != kcontext.end(); ++z) {
+        double multiAssociationFactor = pow(10, kcount[z->first]);
         element.wrd = z->first;
-        element.cnt = z->second;
+        element.cnt = z->second * multiAssociationFactor;
         results.push_back(element);
     }
     sort(results.begin(), results.end());

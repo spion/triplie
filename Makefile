@@ -1,7 +1,7 @@
 CXXFLAGS=-O2 -pipe
 ECXX=-Wall -Wextra -pedantic
 C=gcc
-LIBVAR=-L/usr/local/lib -lpthread -lsqlite3
+LIBVAR=-L/usr/local/include -lsqlite3 -lpthread
 INCVAR=-I/usr/local/include
 IEXTRAS=-I. -I./ai -I./IRC -I./protocol
 
@@ -29,23 +29,24 @@ botdata:
 bootstrap: 
 	make -C botdata bootstrap
 
+
 triplie: ai irc protocol main.o 
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o triplie main.o ai/ai-lib.a irc/IRC.o protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX}  -o triplie main.o ai/ai-lib.a irc/IRC.o protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR}
 
 cmdtriplie: ai protocol maincmdline.o 
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o cmdtriplie maincmdline.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX}  -o cmdtriplie maincmdline.o ai/ai-lib.a protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR} 
 
 feedtriplie: ai protocol mainfeed.o
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -lboost_regex-mt -o feedtriplie mainfeed.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX} -o feedtriplie mainfeed.o ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} -lboost_regex-mt  
 
 worktriplie: ai protocol mainworker.o
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o worktriplie mainworker.o protocol/triproto-lib.a ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX} -o worktriplie mainworker.o protocol/triproto-lib.a ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} 
 
 markovtriplie: ai protocol mainfeedmarkov.o
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o markovtriplie mainfeedmarkov.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX} -o markovtriplie mainfeedmarkov.o ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} 
 
 gentriplie: ai protocol maingenmarkov.o
-	${CXX} ${CXXFLAGS} ${ECXX} ${LIBVAR} -o gentriplie maingenmarkov.o ai/ai-lib.a protocol/triprotomaster-lib.a ${IEXTRAS} ${INCVAR}
+	${CXX} ${CXXFLAGS} ${ECXX} -o gentriplie maingenmarkov.o ai/ai-lib.a protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR}
 
 
 mainfeedmarkov.o: mainfeedmarkov.cc

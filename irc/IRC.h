@@ -79,6 +79,7 @@ public:
 	int raw(const char* data);
 	void hook_irc_command(char* cmd_name, int (*function_ptr)(char*, irc_reply_data*, void*));
 	int message_loop();
+        int is_on(const char* channel, const char* nick);
 	int is_op(const char* channel, const char* nick);
 	int is_voice(const char* channel, const char* nick);
 	char* current_nick();

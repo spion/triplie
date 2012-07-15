@@ -18,6 +18,7 @@
 
 #include <string>
 #include <sqlite3.h>
+//#include <sqlite3ext.h>
 #include <unistd.h>
 #include <stdexcept>
 #include <sstream>
@@ -84,8 +85,8 @@ class SQLite {
         cleanUp();
         if (db) {
             counter = 0;
-            int retres;
-            retres = sqlite3_prepare(db, m_Query.c_str(), -1, &ppVm, &zTail);
+            //int retres;
+            sqlite3_prepare(db, m_Query.c_str(), -1, &ppVm, &zTail);
             if (ppVm == NULL) {
                 throw SQLiteException(m_Query + " -- At InternalQuery:" + sqlite3_errmsg(db));
             }
