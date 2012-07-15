@@ -1,13 +1,19 @@
-Triplie v0.9 beta
-
-
 INTRODUCTION
 ============
 
-Thanks for downloading Triplie, an Nth order Markov model based chatter
-bot. It is probably not as good as MegaHAL, but I believe you will find
-it funny to use. It's interface is directly on IRC, so no need to load
-TCL scripts or wrappers to megahal - you just configure it and run it.
+Triplie is an AI bot based on 2nd up to 6th order Markov model. It uses an SQLite database for storage, and can be distributed to work on multiple machines on a LAN.
+
+Triplie creates directed graphs which are made of
+
+1. nodes, which represent the words read from the user
+2. A graph representing Markov chains of 6th order
+3. links that represent the associations between words from conversations in a network based on the Hebbian rule
+
+To respond to a user, triplie extracts keywords from the user's text, finds their most appropriate associated keywords in the Hebbian association network, and generates replies that contain the associated keywords using multiple breadth-first-search Markov chains algorithm.
+
+For more information on installing and configuring read below or see the README wiki page.
+
+You can join the project's IRC channel too: irc://irc.freenode.net/#triplie
 
 
 COMPILE
