@@ -144,6 +144,8 @@ should extract the following groups, in order:
   - *person* - who sent the message?
   - *message* - text of the message.
 
+See `feed_xchat.sh` and `feed_text.sh` for examples
+
 COMMANDS
 =============
 
