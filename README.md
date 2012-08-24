@@ -1,5 +1,5 @@
-INTRODUCTION
-============
+# INTRODUCTION
+
 
 Triplie is an AI bot based on 2nd up to 6th order Markov model. It uses an SQLite database for storage, and can be distributed to work on multiple machines on a LAN.
 
@@ -16,8 +16,7 @@ For more information on installing and configuring read below or see the README 
 You can join the project's IRC channel too: #triplie on irc.freenode.net
 
 
-COMPILE
-============
+# COMPILE
 
 To compile, unpack and type
 
@@ -30,8 +29,7 @@ You don't need to use these.
 Configure the bot as explained below before running!
 
 
-CONFIGURATION
-============
+# CONFIGURATION
 
 If running the bot for the first time (there is no database file)
 you should type
@@ -40,8 +38,8 @@ you should type
 
 to create the initial database file in botdata/triplie.db
 
-Edit triplie.conf
-----------------
+### Edit triplie.conf
+
 First thing to edit is triplie.conf. Here is what it must contain:
 
     server irc.freenode.net 6667
@@ -81,8 +79,7 @@ Note that these lines can be handled in any order, but it is important that
 there are no missing parameters in any of them. Also, all the starting words
 of those lines MUST be lowercase!
 
-Edit admins.dat / ignores.dat
---------------------------
+### Edit admins.dat / ignores.dat
 
 admins.dat is a simple file which lists all nick!user@hosts with admin access.
 Admins can join or part the bot, get stats for the database, use op/deop/voice
@@ -104,8 +101,8 @@ be a hostmask like the 2 above. You can also have only 1 line.
 Obviously, ignores.dat lists ignore hosts. They are in the same format.
 Its recommended that triplie ignores other triplies
 
-Create triplie.db
----------------
+### Create triplie.db
+
 This is not a configuration file. Its best left intact.
 
 However you should check if this file is present in the botdata
@@ -117,8 +114,7 @@ to create it.
 
 It contains all the data that the bot has learned so far.
 
-Importing existing text
-=============
+# IMPORT EXISTING TEXT
 
 You can import several types of text with the provided scripts:
 
@@ -130,8 +126,8 @@ For plain text files you can use
 
     ./feed_text.sh path/to/textfile.txt
 
-Advanced import
---------------
+### Advanced import
+
 The `feedtriplie` binary supports a regular expression which 
 should extract the following groups, in order:
 
@@ -146,8 +142,7 @@ should extract the following groups, in order:
 
 See `feed_xchat.sh` and `feed_text.sh` for examples
 
-COMMANDS
-=============
+# COMMANDS
 
 List of triplie's commands:
 
@@ -175,8 +170,7 @@ removed and the topic is converted to lowercase
 - triplie will output database statistics
 
 
-NOTES
-================
+# NOTES
 
 triplie has been tested on ubuntu linux, gentoo linux and FreeBSD. 
 Please let me know if your unix-like system is unable to compile the bot.
@@ -185,8 +179,7 @@ This is an beta release, it could contain bugs and have unoptimised
 resource usage. I'm hoping to improve that in next versions
 
 
-LICENCE & AUTHOR
-================
+# LICENCE & AUTHOR
 
 See LICENCE and AUTHORS (if present)
 
