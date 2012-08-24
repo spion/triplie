@@ -40,7 +40,7 @@ you should type
 
 to create the initial database file in botdata/triplie.db
 
-(A) triplie.conf
+Edit triplie.conf
 ----------------
 First thing to edit is triplie.conf. Here is what it must contain:
 
@@ -81,7 +81,7 @@ Note that these lines can be handled in any order, but it is important that
 there are no missing parameters in any of them. Also, all the starting words
 of those lines MUST be lowercase!
 
-admins.dat / ignores.dat
+Edit admins.dat / ignores.dat
 --------------------------
 
 admins.dat is a simple file which lists all nick!user@hosts with admin access.
@@ -104,7 +104,7 @@ be a hostmask like the 2 above. You can also have only 1 line.
 Obviously, ignores.dat lists ignore hosts. They are in the same format.
 Its recommended that triplie ignores other triplies
 
-triplie.db
+Create triplie.db
 ---------------
 This is not a configuration file. Its best left intact.
 
@@ -117,6 +117,31 @@ to create it.
 
 It contains all the data that the bot has learned so far.
 
+Importing existing text
+=============
+
+You can import several types of text with the provided scripts:
+
+    ./feed_xchat.sh path/to/logfile
+
+allows you to feed an xchat-style logfile to the bot.
+
+For plain text files you can use
+
+    ./feed_text.sh path/to/textfile.txt
+
+Advanced usage
+--------------
+The `feedtriplie` binary supports a regular expression which 
+should extract the following groups, in order:
+
+  - *message_time* - either a unix timestamp in seconds, or `Y M D h m s`
+    separated with either of the following: `:- TZ`. You can be
+    less specific e.g. only have h:m:s or m:s (or just h:m but
+    that one might not work as expected)
+  - *location* - where was the message sent (optional, can be omited)?
+  - *person* - Who sent the message?
+  - *message* - text of the message.
 
 COMMANDS
 =============
