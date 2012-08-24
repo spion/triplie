@@ -151,7 +151,7 @@ NOTES
 ================
 
 triplie has been tested on ubuntu linux, gentoo linux and FreeBSD. 
-Please let me know if your *nix system is unable to compile the bot.
+Please let me know if your unix-like system is unable to compile the bot.
 
 This is an beta release, it could contain bugs and have unoptimised
 resource usage. I'm hoping to improve that in next versions
