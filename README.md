@@ -130,17 +130,18 @@ For plain text files you can use
 
     ./feed_text.sh path/to/textfile.txt
 
-Advanced usage
+Advanced import
 --------------
 The `feedtriplie` binary supports a regular expression which 
 should extract the following groups, in order:
 
   - *message_time* - either a unix timestamp in seconds, or `Y M D h m s`
     separated with either of the following: `:- TZ`. You can be
-    less specific e.g. only have h:m:s or m:s (or just h:m but
+    less specific e.g. only have h m s or m:s (or just h:m but
     that one might not work as expected)
-  - *location* - where was the message sent (optional, can be omited)?
-  - *person* - Who sent the message?
+  - *location* - where was the message sent? e.g. a channel 
+    (optional, can be omited)
+  - *person* - who sent the message?
   - *message* - text of the message.
 
 COMMANDS
