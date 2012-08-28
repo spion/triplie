@@ -6,7 +6,7 @@ while [ "1" ]
 do
     if [ "$line" ]
     then
-        echo :: $i blah blah : $line
+        echo :: $i blah blah : "$line"
         empty=0
     else
         empty=$(($empty + 1))
