@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 				else
 				{
 					vector<string> time_tokens;
-					tokenize(happen_time,time_tokens,": ");
+					tokenize(happen_time,time_tokens,": -TZ");
 					unsigned multipliers[] = {1, 60, 60, 24, 0};
 					for (unsigned j = time_tokens.size() - 1, jj=0; 
 						 (multipliers[jj]); --j, ++jj)
