@@ -166,7 +166,7 @@ the bot does not remember the channel after shutdown.
 - changes the topic of the current channel. Note that some characters are
 removed and the topic is converted to lowercase
 
-6.1) >db stats
+6.1) !db stats
 - triplie will output database statistics
 
 
