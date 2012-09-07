@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) Gorgi Kosev a.k.a. Spion
+ *  Copyright (C) Gorgi Kosev a.k.a. Spion, John Peterson.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <vector>
 #include <typeinfo>
 #include <iostream>
+#include "../common.h"
 
 using namespace std;
 
@@ -62,6 +63,7 @@ class SQLite {
     string m_Query;
     bool isDone; // basically, ready for query
     bool InsideTransaction;
+	bool ramdb;
     string dbf;
 
     int colCount;
@@ -107,30 +109,52 @@ class SQLite {
 
 public:
 
-    void OpenDB(string sqdb = "") {
+    void OpenDB(string sqdb = "", bool ramdb = false) {
         if (sqdb.size() > 0) dbf = sqdb;
         sqlite3_enable_shared_cache(1);
-        int sqstate = sqlite3_open(dbf.c_str(), &db);
+		int sqstate = sqlite3_open(ramdb ? ":memory:" : sqdb.c_str(), &db);
         if (sqstate != SQLITE_OK)
             throw SQLiteException(sqlite3_errmsg(db) + string(" (at OpenDB)"));
         sqlite3_busy_timeout(db, SQLITE_DEFAULT_TIMEOUT);
         isDone = true;
         colCount = 0;
+		if (ramdb) copyDB(db, dbf);
     }
 
     void CloseDB() {
         cleanUp();
+		if (ramdb) copyDB(db, dbf, false);
         if (db) {
             sqlite3_close(db);
         }
     }
 
+	int copyDB(sqlite3 *pInMemory, string f, bool i = true) {
+		log("%s database ...\n", i ? "Reading" : "Saving");
+		int rc;
+		sqlite3 *pFile, *pTo, *pFrom;
+		sqlite3_backup *pBackup;
+		rc = sqlite3_open(f.c_str(), &pFile);
+		if (rc == SQLITE_OK) {
+			pFrom = (i ? pFile: pInMemory);
+			pTo = (i ? pInMemory : pFile);
+			pBackup = sqlite3_backup_init(pTo, "main", pFrom, "main");
+			if (pBackup) {
+				(void)sqlite3_backup_step(pBackup, -1);
+				(void)sqlite3_backup_finish(pBackup);
+			}
+			rc = sqlite3_errcode(pTo);
+		}
+		(void)sqlite3_close(pFile);
+		return rc;
+	}
+	
     long int GetCounter() {
         return counter;
     }
 
-    SQLite(string sqdb) {
-        OpenDB(sqdb);
+    SQLite(string sqdb, bool ramdb = false) : ramdb(ramdb) {
+        OpenDB(sqdb, ramdb);
         InsideTransaction = false;
     }
 

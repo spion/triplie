@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) Gorgi Kosev a.k.a. Spion
+ *  Copyright (C) Gorgi Kosev a.k.a. Spion, John Peterson.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,55 +15,89 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
+#include <boost/regex.hpp>
+#include <cctype>
+#include <fcntl.h>
+#include <getopt.h>
+#include <iostream>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <signal.h>
 #include <unistd.h>
-
-#include "wildcard/wildcards.cpp"
-#include "ai/tokens.h"
 #include "ai/ai.hpp"
-#include <cctype>
-#include <iostream>
-
-#include <boost/regex.hpp>
-
+#include "ai/tokens.h"
+#include "common.h"
+#include "wildcard/wildcards.cpp"
 using namespace std;
 
-AI* tai; //("botdata/triplie.db");
-
-/* ---------------- */
-
-/* ****************************************
-    The code.
- * ************************************* */
+AI* tai;
+string db = "botdata/triplie.db", r = "::\\s([0-9]+)\\s(\\S+)\\s(\\S+)[\\s\:]+(.+)";
+int opt[] = {'h', 'V', 'd', 'r'};
+string args = "hVd:r:";
+string optl[] = {"help", "version", "database", "regex"};
+void usage() {
+	fprintf(stdout, "Usage: feedtriplie [-h] [-V] [-d database] -r regex\n"
+		"\t\033[1m-%c, --%s\033[0m\tdisplay this message.\n"
+		"\t\033[1m-%c, --%s\033[0m\tdisplay version.\n"
+		"\t\033[1m-%c, --%s\033[0m\tdatabase file. \033[1;30mex: '%s' (default).\033[0m\n"
+		"\t\033[1m-%c, --%s\033[0m\tinput format as regular expression. \033[1;30mex: '%s' (default).\033[0m\n",		
+		opt[0], optl[0].c_str(),
+		opt[1], optl[1].c_str(),
+		opt[2], optl[2].c_str(), db.c_str(),
+		opt[3], optl[3].c_str(), r.c_str());
+}
+bool get_arg(int argc, char** argv) {
+	u32 i = 0;
+	struct option longopts[] = {
+		{optl[i].c_str(),	no_argument,		NULL,	opt[i++]},
+		{optl[i].c_str(),	no_argument,		NULL,	opt[i++]},
+		{optl[i].c_str(),	required_argument ,	NULL,	opt[i++]},
+		{optl[i].c_str(),	required_argument ,	NULL,	opt[i++]},
+		{NULL,				0,					NULL,	0}
+	};
+	int c;
+	vector<string> v_tmp;
+	while ((c = getopt_long(argc, argv, args.c_str(), longopts, 0)) != -1) {
+		switch (c) {
+		case 'V':
+			log("%s %s\n", VERDATE, VER);
+			return true;
+		case 'h':
+			usage();
+			return true;
+		case 'd':
+			db = optarg;
+			break;
+		case 'r':
+			r = optarg;
+			break;
+		default:
+			fprintf(stderr, "unknown option: %c\n", c);
+			break;
+		}
+	}
+	return false;
+}
 
 int main(int argc, char** argv) {
-	tai = new AI("botdata/triplie.db");
+	if (get_arg(argc, argv)) return 0;
+	tai = new AI(db);
 	setlocale(LC_ALL, "en_US.utf8");
-	if (argc < 2) {
-		cerr << "Usage " << argv[0] << " <regular_expression>" << endl;
-		return 1;
-	}
 	string theline;
     theline="";
 	/* Displaying a banner with info... */
-	cout << "Triple AI bot started" << endl
-	     << "Eating data from stdin..." << endl;
-	unsigned long i = 0;
-	unsigned long ii = 0;
-	string mstr;
-	for (int k = 1; k < argc; ++k) {
-		mstr += argv[k];
-	}
+	cout << "Database " << db << endl
+		<< "Triple AI bot started" << endl
+	    << "Reading data from stdin ..." << endl;
+	u64 i = 0;
+	u16 u_interval = 100;
+	double time_start = seconds(), time_last = seconds();
 	tai->UnsafeFastMode();
-	const boost::regex e(mstr);
-	cout << "Matching " << mstr << endl;
+	const boost::regex e(r);
+	cout << "Matching " << r << endl;
 	boost::smatch what;
 	while (cin && !cin.eof()) {
 		getline(cin,theline);
@@ -111,12 +145,7 @@ int main(int argc, char** argv) {
 						if (j == 0) break;
 					}
 				}
-#ifdef _FEED_DEBUG
-				cout << happen_time_sec << "::"
-					 << happen_where << "::"
-					 << happen_who << ":::"
-					 << happen_theline << endl;
-#endif
+				log2("%u::%s::%s::%s\n", happen_time_sec, happen_where.c_str(), happen_who.c_str(), happen_theline.c_str());
 				vector<string> tokens;
 				tokenize(happen_theline,tokens," ,:");
 				if (tokens.size() > 0 && 
@@ -126,26 +155,20 @@ int main(int argc, char** argv) {
 					tai->learndatastring(happen_who, happen_where, happen_time_sec);
 				}
 				else {
-#ifdef _FEED_DEBUG	
-					cout << "is a CTCP" << endl;
-#endif
+					log2("is a CTCP\n");
 				}
 			}
-
 		}
-		i = ((i+1) % 100);
-		if (i == 0) {
-#ifndef _FEED_DEBUG
-			cout << "+";
-			cout.flush();
-#endif
-			++ii;
-			if (ii > 50) { ii = 0; cout << " +5K" << endl; }
-			tai->UnsafeQuery("VACUUM; ANALYZE;");
+		i++;
+		if (i%u_interval == 0) {
+			log("\r\033[KReading %'llu lines, %'.0f s, %'.0f lines/s ...", i, (seconds()-time_start)/1000, u_interval/((seconds()-time_last)/1000));
+			time_last = seconds();
 		}
 	}
-	cout << endl << "Done eating." << endl;
+	tai->UnsafeQuery("VACUUM; ANALYZE;");
+	cout << endl << "Done reading." << endl;
 	tai->savealldata();
+	tai->CloseDB();
 	cout << "Bye bye." << endl;
     return 0;
 }

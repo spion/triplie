@@ -18,6 +18,11 @@ You can join the project's IRC channel too: #triplie on irc.freenode.net
 
 # COMPILE
 
+Prerequisites
+
+sudo apt-get install libsqlite3-dev libboost-regex-dev
+apt-cyg install libsqlite3-devel libboost-devel
+
 To compile, unpack and type
 
     make
@@ -40,40 +45,53 @@ to create the initial database file in botdata/triplie.db
 
 ### Edit triplie.conf
 
-First thing to edit is triplie.conf. Here is what it must contain:
+First thing to edit is triplie.conf. Here is what it must contain unless specified by argument:
 
     server irc.freenode.net 6667
     nick triplie
     ident triplie
     name Triplie Diplie
     chan #triplie #otherchan
+	
+here is what it in addition can contain
+	
+	db file.db	
+	pass
     sleep min max
+	partake 1 2
+	speak 120 240
     char !
 
-1. The first line specifies the server here. This line MUST contain 3 words:
+• server. The line specifies the server here. This line MUST contain 3 words:
 server hostname portnumber
 They must all be correct. Otherwise the bot will not connect to the
 server.
 
-2. The second line is in the format "nick yourbotsnick" If the nickname is in
+• nick. The line is in the format "nick yourbotsnick" If the nickname is in
 use, this simple version will not try another nick. Also, the nickname
 must be lowercase, letters/numbers only.
 
-3. The third line is what will appear as the username of the bot if no identd
+• ident. The line is what will appear as the username of the bot if no identd
 is installed on the machine. Same rules as for nick apply.
 
-4. The fourth line specifies the real name of the bot.
+• name. Specifies the real name of the bot.
 
-5. The fifth line specifies the default channels. When run, triplie will ALWAYS
+• chan. The line specifies the default channels. When run, triplie will ALWAYS
 try to join these channels first. The channel names are separated with space.
 
-6. Sleep specifies minimum/maximum pause time between request and answer,
-in seconds. For example: 
-`sleep 2 7`
-will make the bot wait between 2 and 7 seconds before answering. This is
+• db. Database file.
+
+• pass. Server password. 
+
+• sleep. Specifies minimum/maximum pause time between request and answer,
+in seconds. For example `sleep 2 7` will make the bot wait between 2 and 7 seconds before answering. This is
 used to prevent people from flooding the bot.
 
-7. char specifies the command char prefix. 
+• partake. Control unsolicited reply (reply to channel message even when bot nickname is not in the message). The first argument is the reply probability given as 0 to 100. 0 is no replies. The second argument is the highest amount of total channel messages during the past minute that allow an unsolicited reply. 0 is no limit.
+
+• speak. Control unsolicited speak (speak on own initiative). The arguments are the minimum and maximum seconds without channel messages that will trigger speak.
+
+• char. Specifies the command char prefix. 
 
 Note that these lines can be handled in any order, but it is important that
 there are no missing parameters in any of them. Also, all the starting words
@@ -118,13 +136,17 @@ It contains all the data that the bot has learned so far.
 
 You can import several types of text with the provided scripts:
 
-    ./feed_xchat.sh path/to/logfile
+    ./feed_xchat.sh path/to/logfile [database.db]
 
 allows you to feed an xchat-style logfile to the bot.
 
 For plain text files you can use
 
-    ./feed_text.sh path/to/textfile.txt
+prerequisites
+
+if [ $(uname -o) == 'Cygwin' ]; then s=; else s=sudo; fi; f=stanford-parser-2012-07-09.tgz; $s mkdir -p /usr/local/lib/java; wget -N http://nlp.stanford.edu/software/$f; 7z e $f -so|$s 7z e -aoa -si -ttar -o/usr/local/lib/java */stanford-parser.jar; rm "$f"
+
+    ./feed_text.sh path/to/textfile.txt [database.db]
 
 ### Advanced import
 
@@ -169,10 +191,11 @@ removed and the topic is converted to lowercase
 6.1) !db stats
 - triplie will output database statistics
 
+!cmd set the option silently. !!cmd confirm the command to the sending channel or user.
 
 # NOTES
 
-triplie has been tested on ubuntu linux, gentoo linux and FreeBSD. 
+triplie has been tested on ubuntu linux, gentoo linux, FreeBSD and Cygwin. 
 Please let me know if your unix-like system is unable to compile the bot.
 
 This is an beta release, it could contain bugs and have unoptimised

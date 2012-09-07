@@ -1,0 +1,16 @@
+botdata*
+cmdtriplie*
+feedtriplie*
+gentriplie*
+markovtriplie*
+strip*
+tdb*
+triplie*
+worktriplie*
+*.a
+*.conf
+*.dat
+*.db*
+*.o
+*.lock
+*.txt

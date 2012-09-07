@@ -1,16 +1,61 @@
-#include "../ai/sqlite_class.h"
-
+// (C) Gorgi Kosev a.k.a. Spion, John Peterson. License GNU GPL 3.
 #include <fstream>
 #include <iostream>
-
+#include <getopt.h>
+#include "../ai/sqlite_class.h"
+#include "../common.h"
 using std::ifstream;
 using std::cout; using std::endl;
 
 template <typename From, typename To> To convert(From f) { To t; stringstream s; s << f; s >> t; return t; } 
 
+string d = "triplie.db";
+int opt[] = {'h', 'V', 'd'};
+string args = "hVd:";
+string optl[] = {"help", "version", "database"};
+void usage() {
+	fprintf(stdout, "Usage: tdb [-h] [-V] [-d database]\n"
+		"\t\033[1m-%c, --%s\033[0m\tdisplay this message.\n"
+		"\t\033[1m-%c, --%s\033[0m\tdisplay version.\n"
+		"\t\033[1m-%c, --%s\033[0m\tdatabase file. \033[1;30mex: '%s' (default).\033[0m\n",		
+		opt[0], optl[0].c_str(),
+		opt[1], optl[1].c_str(),
+		opt[2], optl[2].c_str(), d.c_str());
+}
+bool get_arg(int argc, char** argv) {
+	u32 i = 0;
+	struct option longopts[] = {
+		{optl[i].c_str(),	no_argument,		NULL,	opt[i++]},
+		{optl[i].c_str(),	no_argument,		NULL,	opt[i++]},
+		{optl[i].c_str(),	required_argument ,	NULL,	opt[i++]},
+		{NULL,				0,					NULL,	0}
+	};
+	int c;
+	vector<string> v_tmp;
+	while ((c = getopt_long(argc, argv, args.c_str(), longopts, 0)) != -1) {
+		switch (c) {
+		case 'V':
+			log("%s %s\n", VERDATE, VER);
+			return true;
+		case 'h':
+			usage();
+			return true;
+		case 'd':
+			d = optarg;
+			break;
+		default:
+			fprintf(stderr, "unknown option: %c\n", c);
+			break;
+		}
+	}
+	return false;
+}
+
 int main(int argc, char** argv)
 {
-	SQLite db("triplie.db");
+	if (get_arg(argc, argv)) return 0;
+	cout << "Using " << d << endl;
+	SQLite db(d);
 	db.QueryExec("CREATE TABLE if not exists markov (id1, id2, id3, id4, id5, id6, val, PRIMARY KEY  (id1,id2,id3,id4,id5,id6))");
 	db.QueryExec("CREATE TABLE if not exists dict (id INTEGER PRIMARY KEY, word, wcount);");
 	db.QueryExec("CREATE TABLE if not exists assoc (id1, id2, val, PRIMARY KEY (id1, id2));");

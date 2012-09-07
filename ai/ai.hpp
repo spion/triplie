@@ -80,7 +80,7 @@ private:
     int aipermute;
     unsigned maxpermutecount;
 public:
-    AI(string dbf);
+    AI(string dbf, bool ramdb = false);
 
     void CloseDB() {
         db.CloseDB();
@@ -118,6 +118,7 @@ public:
     void learndatastring(const string& bywho, const string& where, const time_t& when);
     const string getdatastring(const string& where, const time_t& when);
     const string getdatastring();
+	const string getspeak(string m = "", int loop = 20);
 
     void extractkeywords();
     void expandkeywords();
@@ -129,6 +130,9 @@ public:
 
     void maxpermute(unsigned num) {
         maxpermutecount = num;
+    }
+	unsigned getmaxpermute() {
+        return maxpermutecount;
     }
     bool useRandom;
 

@@ -1,12 +1,11 @@
-CXXFLAGS=-O2 -pipe
+CXXFLAGS+=-O2 -pipe
 ECXX=-Wall -Wextra -pedantic
-C=gcc
-LIBVAR=-L/usr/local/include -lsqlite3 -lpthread
+LIBVAR=-L/usr/local/include -lsqlite3 -lpthread -lboost_regex-mt
 INCVAR=-I/usr/local/include
 IEXTRAS=-I. -I./ai -I./IRC -I./protocol
+V=-DVER="\"$(shell git log -n1 --format=%H HEAD)\"" -DVERDATE="\"$(shell date -u -d@`git log -n1 --format=%at HEAD` +%FT%TZ)\""
 
 .PHONY: ai irc protocol botdata strip
-
 
 all: triplie cmdtriplie worktriplie botdata
 
@@ -30,17 +29,17 @@ bootstrap:
 	make -C botdata bootstrap
 
 
-triplie: ai irc protocol main.o 
-	${CXX} ${CXXFLAGS} ${ECXX}  -o triplie main.o ai/ai-lib.a irc/IRC.o protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR}
+triplie: ai irc protocol main.o common.o
+	${CXX} ${CXXFLAGS} ${ECXX}  -o triplie main.o common.o ai/ai-lib.a irc/IRC.o protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR}
 
-cmdtriplie: ai protocol maincmdline.o 
-	${CXX} ${CXXFLAGS} ${ECXX}  -o cmdtriplie maincmdline.o ai/ai-lib.a protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR} 
+cmdtriplie: ai protocol maincmdline.o common.o
+	${CXX} ${CXXFLAGS} ${ECXX}  -o cmdtriplie maincmdline.o common.o ai/ai-lib.a protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR}
 
-feedtriplie: ai protocol mainfeed.o
-	${CXX} ${CXXFLAGS} ${ECXX} -o feedtriplie mainfeed.o ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} -lboost_regex-mt  
+feedtriplie: ai protocol mainfeed.o common.o
+	${CXX} ${CXXFLAGS} ${ECXX} -o feedtriplie mainfeed.o common.o ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} 
 
-worktriplie: ai protocol mainworker.o
-	${CXX} ${CXXFLAGS} ${ECXX} -o worktriplie mainworker.o protocol/triproto-lib.a ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} 
+worktriplie: ai protocol mainworker.o common.o
+	${CXX} ${CXXFLAGS} ${ECXX} -o worktriplie mainworker.o  common.o protocol/triproto-lib.a ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR}
 
 markovtriplie: ai protocol mainfeedmarkov.o
 	${CXX} ${CXXFLAGS} ${ECXX} -o markovtriplie mainfeedmarkov.o ai/ai-lib.a protocol/triprotomaster-lib.a  ${LIBVAR} ${IEXTRAS} ${INCVAR} 
@@ -48,29 +47,11 @@ markovtriplie: ai protocol mainfeedmarkov.o
 gentriplie: ai protocol maingenmarkov.o
 	${CXX} ${CXXFLAGS} ${ECXX} -o gentriplie maingenmarkov.o ai/ai-lib.a protocol/triprotomaster-lib.a ${LIBVAR} ${IEXTRAS} ${INCVAR}
 
-
-mainfeedmarkov.o: mainfeedmarkov.cc
-	${CXX} ${CXXFLAGS} ${ECXX} -c "mainfeedmarkov.cc" -o "mainfeedmarkov.o" -I. -I./ai ${INCVAR}
-
-maingenmarkov.o: maingenmarkov.cc
-	${CXX} ${CXXFLAGS} ${ECXX} -c "maingenmarkov.cc" -o "maingenmarkov.o" -I. -I./ai ${INCVAR}
-
-main.o: main.cc
-	${CXX} ${CXXFLAGS} ${ECXX} -c "main.cc" -o "main.o" -I. -I./ai ${INCVAR}
-
-maincmdline.o: maincmdline.cc
-	${CXX} ${CXXFLAGS} ${ECXX} -c "maincmdline.cc" -o "maincmdline.o" -I. -I./ai ${INCVAR}
-
-mainfeed.o: mainfeed.cc
-	${CXX} ${CXXFLAGS} ${ECXX} -c "mainfeed.cc" -o "mainfeed.o" -I. -I./ai ${INCVAR}
-
-mainworker.o: mainworker.cc
-	${CXX} ${CXXFLAGS} ${ECXX} -c "mainworker.cc" -o "mainworker.o" -I. -I./ai ${INCVAR}
-
-
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) ${ECXX} ${DEBUG} -c $< -o $@ -I. -I./ai ${INCVAR} ${V}
 
 clean:
-	rm *.o ai/*.o irc/*.o protocol/*.o botdata/tdb protocol/*.a 2> /dev/null
+	rm -f *.o ai/*.o irc/*.o protocol/*.o botdata/tdb protocol/*.a 2> /dev/null
 
 strip:
 	strip -s *triplie

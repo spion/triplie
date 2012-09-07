@@ -1,7 +1,7 @@
 /*
  *      tokens.cc
  *
- *      Copyright 2008 Gorgi Kosev <spion@spion.ws>
+ *      Copyright 2008 Gorgi Kosev <spion@spion.ws>. 2012 John Peterson.
  *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include <list>
 #include <math.h>
 #include <stdexcept>
-
+#include <boost/regex.hpp>
 #include "tokens.h"
 #include "ConvertUTF.c"
 
@@ -286,4 +286,20 @@ void lowercase(string& s) {
             #endif
      */
 
+}
+
+// find in words. require word part to be at least four letters or half the word length.
+bool find_in_words(string& s, string t) {
+	boost::sregex_iterator i(s.begin(), s.end(), boost::regex("\\b[\\w]+\\b", boost::regex::perl));
+	boost::sregex_iterator j;
+	string m;
+	bool match = false;
+	for (; i != j; i++) {
+		if ((i->str().length() >=4 || i->str().length() >= t.length()/2) && t.find(i->str()) != string::npos) {
+			match = true;
+			m.append(i->str());
+		}
+	}
+	s = boost::regex_replace(s, boost::regex(m), "");
+	return match;
 }

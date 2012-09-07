@@ -101,6 +101,25 @@ void IRC::delete_irc_command_hook(irc_command_hook* cmd_hook) {
     delete cmd_hook;
 }
 
+void IRC::print(int a, int c, char* f, ...) {
+	const int len = 0xfff;
+	char buf[len];
+	va_list l;
+	va_start(l, f);
+	vsnprintf(buf, len, f, l);
+	va_end(l);
+	log1("\033[1;30m%s\033[0m\033[%d;%dm %s\033[0m", time_hm().c_str(), a, c, buf);
+}
+void IRC::print(char* f, ...) {
+	const int len = 0xfff;
+	char buf[len];
+	va_list l;
+	va_start(l, f);
+	vsnprintf(buf, len, f, l);
+	va_end(l);
+	print(0, 37, buf);
+}
+
 int IRC::start(const char* server, int port,
         const char* nick, const char* user, const char* name,
         const char* pass) {
@@ -320,7 +339,7 @@ void IRC::parse_irc_reply(char* data) {
 #ifdef TRIP_DEBUG
     printf("Parse IRC reply\n");
 #endif
-    char* hostd;
+    char* hostd = (char*)malloc(strlen(data));
     char* cmd;
     char* params;
     //char buffer[514];
@@ -337,7 +356,7 @@ void IRC::parse_irc_reply(char* data) {
 
 
     if (data[0] == ':') {
-        hostd = &data[1];
+		strcpy(hostd, &data[1]);
         cmd = strchr(hostd, ' ');
         if (!cmd)
             return;
@@ -365,6 +384,9 @@ void IRC::parse_irc_reply(char* data) {
         printf("Analyzing command\n");
 #endif
         if (!strcmp(cmd, "JOIN")) {
+			chan_temp = params;
+			if (chan_temp[0] == ':') chan_temp++;
+			print(2, 32, "%s: %s (%s@%s) joined\n", chan_temp, hostd_tmp.nick, hostd_tmp.ident, hostd_tmp.host);
             cup = chan_users;
             if (cup) {
                 while (cup->nick) {
@@ -383,6 +405,7 @@ void IRC::parse_irc_reply(char* data) {
                 strcpy(cup->nick, hostd_tmp.nick);
             }
         } else if (!strcmp(cmd, "PART")) {
+			print(2, 33, "%s: %s (%s@%s) part\n", params, hostd_tmp.nick, hostd_tmp.ident, hostd_tmp.host);
             channel_user* d;
             channel_user* prev;
 
@@ -419,6 +442,9 @@ void IRC::parse_irc_reply(char* data) {
                 }
             }
         } else if (!strcmp(cmd, "QUIT")) {
+			chan_temp = params;
+			if (chan_temp[0] == ':') chan_temp++;
+			print(2, 33, "%s (%s@%s) quit (%s)\n", hostd_tmp.nick, hostd_tmp.ident, hostd_tmp.host, chan_temp);
             channel_user* d;
             channel_user* prev;
 
@@ -651,16 +677,17 @@ void IRC::parse_irc_reply(char* data) {
             if (!params)
                 return;
             *(params++) = '\0';
-#ifdef __IRC_DEBUG__
-            printf("%s: <%s> %s\n", hostd_tmp.target, hostd_tmp.nick, &params[1]);
-#endif
+            print(0, 36, "%s: <%s> %s\n", hostd_tmp.target, hostd_tmp.nick, &params[1]);
+
         } else if (!strcmp(cmd, "NICK")) {
             if (!strcmp(hostd_tmp.nick, cur_nick)) {
                 delete [] cur_nick;
                 cur_nick = new char[strlen(params) + 1];
                 strcpy(cur_nick, params);
             }
-        }
+        } else {
+			print("%s\n", data);
+		}
 #ifdef TRIP_DEBUG
         printf("Calling hoook\n");
 #endif

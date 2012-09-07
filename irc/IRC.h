@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "../common.h"
 
 #define __CPIRC_VERSION__	0.11
 
@@ -60,6 +61,8 @@ class IRC
 public:
 	IRC();
 	~IRC();
+	void print(int a, int c, char* fmt, ...);
+	void print(char* fmt, ...);
 	int start(const char* server, int port, 
 			   const char* nick, const char* user, const char* name, 
 				const char* pass);

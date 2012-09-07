@@ -18,15 +18,11 @@
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
  */
-
-#ifndef _TOKENS_H
-#define _TOKENS_H
-
+#pragma once
         /*  A bit unclean. Besides being a token-functions file this also
                 contains some standard math functions that are in use,
                 and some types that hold our data.
          */
-
 #include <string>
 #include <algorithm>
 #include <vector>
@@ -35,8 +31,7 @@
 #include <list>
 #include <math.h>
 #include <ctime>
-
-        using namespace std;
+using namespace std;
 
 struct CAdminList {
     vector<string> userhosts;
@@ -52,7 +47,6 @@ void tokenizelossles(const string& str,
         vector<string>& tokens,
         const string& delimiters = " ");
 
-
 string gettok(const std::string& str, long int n,
         const std::string& delimiters = " ");
 
@@ -65,9 +59,5 @@ long int findtok(const std::string& str, const std::string& token,
 string subtokstring(const vector<string>& tokens, unsigned int n1,
         unsigned int n2, const string& c);
 
-
-
 void lowercase(string& s);
-
-
-#endif /* _TOKENS_H */
+bool find_in_words(string& s, string t);

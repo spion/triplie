@@ -15,44 +15,25 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
-
-#include <sys/types.h>
-#include <time.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
-
-#include "wildcard/wildcards.cpp"
-#include "ai/tokens.h"
-#include "ai/ai.hpp"
 #include <cctype>
+#include <fcntl.h>
 #include <iostream>
-
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <unistd.h>
+#include "ai/ai.hpp"
+#include "ai/tokens.h"
+#include "common.h"
+#include "wildcard/wildcards.cpp"
 using namespace std;
 
-AI* tai; //("botdata/triplie.db");
-
+AI* tai;
 unsigned long int defmodel = 2;
-
 bool shouldtalk;
-
-/* ---------------- */
-
-
-double GetTickCount() {
-    timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000.0) + (tv.tv_usec / 1000.0);
-}
-
-/* ****************************************
-    The code.
- * ************************************* */
 
 int main() {
     tai = new AI("botdata/triplie.db");
@@ -75,7 +56,6 @@ int main() {
     cout << tai->countwords() << " words, ";
     cout << tai->countrels() << " relations known." << endl;
     cout << "Waiting for input. Commands: !save, !quit" << endl << endl;
-
 
     shouldtalk = true;
     tai->connect_to_workers("workers.dat");
@@ -128,21 +108,20 @@ int main() {
             else {
                 //reply and learn
                 //reply
-                double clockstart = GetTickCount();
+                double clockstart = seconds();
                 tai->setdatastring(subtokstring(tokens, 0, 100, " "));
                 tai->extractkeywords();
                 tai->expandkeywords();
                 cout << "- " << tai->getdatastring() << endl;
                 tai->connectkeywords(defmodel);
                 aireply = tai->getdatastring("(console)", time(0));
-                double tsec = (GetTickCount() - clockstart);
+                double tsec = (seconds() - clockstart);
                 if (aireply == "") {
                     aireply = "*shrug*";
                 }
                 cout << "> "
                         << aireply
                         << " (" << tsec << ")" << endl;
-
 
                 tai->setdatastring(theline);
                 tai->learndatastring("(other)", "(console)", time(0));

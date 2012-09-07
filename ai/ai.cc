@@ -31,7 +31,8 @@ using std::numeric_limits;
 
 /* Initializations */
 
-AI::AI(string dbf) : db(dbf) {
+AI::AI(string dbf, bool ramdb) : db(dbf, ramdb) {
+	log("Init database ...\n");
     db.Query("PRAGMA cache_size = 50000; PRAGMA temp_store = MEMORY;");
     db.Query("PRAGMA read_uncommited = True;");
     markov.CMarkovInit(&db);
@@ -345,6 +346,19 @@ const string AI::getdatastring() {
         }
     }
     return theline;
+}
+
+const string AI::getspeak(string m, int loop) {
+	unsigned c = dictionary.count();
+	if (!c) return "";
+	for (unsigned i = 0; i < loop; ++i) {
+		m.append(dictionary.GetWord(rand()%c+1) + " ");
+	}
+	setdatastring(m);
+	extractkeywords();
+	expandkeywords();
+	connectkeywords(3);
+	return getdatastring("(null)", time(0));
 }
 
 const string AI::getnumericdatastring() {

@@ -26,12 +26,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-
-
 #include "protocol/triproto.h"
 #include "ai/ai.hpp"
-
-
 
 void forktobg() {
 	int i;
@@ -59,7 +55,6 @@ void forktobg() {
 	signal(SIGTTIN,SIG_IGN);
 }
 
-
 int main(int argc, char** argv)
 {
 	forktobg();
@@ -77,5 +72,4 @@ int main(int argc, char** argv)
 		delete twp;
 		sleep(1);
 	}
-
 }
