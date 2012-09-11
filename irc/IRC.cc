@@ -108,7 +108,7 @@ void IRC::print(int a, int c, char* f, ...) {
 	va_start(l, f);
 	vsnprintf(buf, len, f, l);
 	va_end(l);
-	log1("\033[1;30m%s\033[0m\033[%d;%dm %s\033[0m", time_hm().c_str(), a, c, buf);
+	log1("\033[%d;%dm%s\033[0m", a, c, buf);
 }
 void IRC::print(char* f, ...) {
 	const int len = 0xfff;

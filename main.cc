@@ -597,6 +597,7 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
     tokenize(msg, tokens, " ,:");
     isadmin = admin_auth(userhost);
     if (check_ignore(userhost)) {
+		log2("ignored <%s> %s\n", userhost.c_str(), msg.substr(1).c_str());
 		logmsg(time(0), wheretosend, hostd->nick, msg);
 		return 0;
 	}
@@ -607,12 +608,10 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
         /* lets see if we have a command here... from the admin. */
         if (wildmatch.wildcardfit(string(defchar + "*").c_str(), tokens[0].c_str())) {
             if (isadmin) {
-                log2("Message is command from admin\n");
+				log2("authorized <%s> %s\n", userhost.c_str(), msg.substr(1).c_str());
                 proccmd(rawcmd, msg.substr(1), msgtarget, wheretosend);
-            }
-            else {
-                log2("Message is command but from non-admin, ignoring\n");        
-            }
+            } else
+                log2("unauthorized <%s> %s\n", userhost.c_str(), msg.substr(1).c_str());
         }
         else {
             log2("Message is regular text...\n");
@@ -693,9 +692,6 @@ int main(int argc, char** argv) {
     setlocale(LC_ALL, "en_US.utf8");
     shouldreconnect = true;
 
-	cout << admins.userhosts.size() << " admins in list" << endl;
-    cout << ignores.userhosts.size() << " ignores in list" << endl;	
-	
 	// register signal handler
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
@@ -706,19 +702,17 @@ int main(int argc, char** argv) {
 	
     /* Displaying a banner with info... */
     log2("Debug mode enabled.\n");
-    cout << "Triple AI bot started" << endl
-		<< "Admin database@'admins.dat' ai db@'" << db << "'" << endl;
-    cout << "Server " << server << ":" << defport << endl;
-    cout << "Nickname: " << defnick << " Ident: " << defuser << endl;
-	cout << "Channel: " << defchans[0] << endl;
+    log("Triple AI bot started\n");
+	log("Config '%s', '%s', 'admins.dat', 'ignores.dat'\n", confFile.c_str(), db.c_str());
 
     //* this might need another seed in WIN32 *//
     srand(time(0));
 
     if (tai) {
 		tai->readalldata();
-		log("%'u words, %'u relations, %'u associations in database.\n", tai->countwords(), tai->countrels(), tai->countvrels());
+		log("%'u words, %'u relations, %'u associations in ai database\n", tai->countwords(), tai->countrels(), tai->countvrels());
 	}
+	log("%d admins, %d ignores\n", admins.userhosts.size(), ignores.userhosts.size());
 
 	// register stdin handler
 	pthread_create(&thread_r, NULL, reader, NULL);	
@@ -741,10 +735,11 @@ int main(int argc, char** argv) {
 	conn->hook_irc_command((char *) "PART", &procpart);
 	conn->hook_irc_command((char *) "QUIT", &procquit);
     conn->hook_irc_command((char *) "001", &end_of_motd);
+	log("Connecting %s:%u %s!~%s '%s' %s\n", server.c_str(), defport, defnick.c_str(), defuser.c_str(), defname.c_str(), defchans[0].c_str());
     log2("Connecting to the server...\n");
     conn->start(server.c_str(), defport, defnick.c_str(), defuser.c_str(), defname.c_str(), serverpass.c_str());
     log2("Entering message loop...\n");
-	log("Connected to server.\n");
+	log("Connected to server\n");
 
     if (tai) tai->connect_to_workers("workers.dat");
     while (shouldreconnect) {
@@ -868,6 +863,7 @@ int readsettings(string confFile) {
             setts >> defuser;
         } else if (strsetting == "name") {
             getline(setts, defname);
+			boost::algorithm::trim(defname);
         } else if (strsetting == "chan") {
             getline(setts, strsetting);
             tokenize(strsetting, defchans, " \n");
