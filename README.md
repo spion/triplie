@@ -61,6 +61,7 @@ here is what it in addition can contain
 	partake 1 2
 	speak 120 240
     char !
+    use_default_response false
 
 • server. The line specifies the server here. This line MUST contain 3 words:
 server hostname portnumber
@@ -92,6 +93,9 @@ used to prevent people from flooding the bot.
 • speak. Control unsolicited speak (speak on own initiative). The arguments are the minimum and maximum seconds without channel messages that will trigger speak.
 
 • char. Specifies the command char prefix. 
+
+• use_default_response. Toggles default english response when the AI is unable to find an appropriate one. 
+Default is true
 
 Note that these lines can be handled in any order, but it is important that
 there are no missing parameters in any of them. Also, all the starting words
