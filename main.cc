@@ -322,11 +322,11 @@ void proccmd(string& rawcmd, string msg, string msgtarget, string wheretosend) {
 	tokenize(msg, tokens, " ,:");
 	u32 x = tokens.size();
 	string dc = defchar;
-	bool change = false, suppress_reply = wildmatch.wildcardfit(string(dc + dc + "*").c_str(), tokens[0].c_str());
+    bool change = false, suppress_reply = wildmatch.wildcardfit(string(dc + dc + "*").c_str(), tokens[0].c_str());
 	if (suppress_reply) tokens[0] = tokens[0].substr(1);
 	bool reply = wheretosend.empty() || !suppress_reply;
 	/* command to join/part channel */
-	if (tokens[0] == dc + "join") {
+    if (tokens[0] == dc + "join") {
 		if (x >= 2) irc_conn->join(tokens[1].c_str());
 	} else if (tokens[0] == dc + "part") {
 		if (x >= 2) irc_conn->part(tokens[1].c_str());
@@ -464,7 +464,7 @@ void proccmd(string& rawcmd, string msg, string msgtarget, string wheretosend) {
 	}
 }
 void proccmd(string msg, string msgtarget, string wheretosend) {
-	string rawcmd;
+    string rawcmd;
 	proccmd(rawcmd, msg, msgtarget, wheretosend);
 }
 
@@ -602,12 +602,17 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
     if (tokens.size() >= 1) {
         log2("Message has tokens ...\n");
         /* lets see if we have a command here... from the admin. */
-        if ((wildmatch.wildcardfit(string(defchar + "*").c_str(), tokens[0].c_str()))
-                && (isadmin)
-                ) {
-			proccmd(rawcmd, msg.substr(1), msgtarget, wheretosend);
-        } else {
-            log2("Message is regular text...");
+        if (wildmatch.wildcardfit(string(defchar + "*").c_str(), tokens[0].c_str())) {
+            if (isadmin) {
+                log2("Message is command from admin\n");
+                proccmd(rawcmd, msg.substr(1), msgtarget, wheretosend);
+            }
+            else {
+                log2("Message is command but from non-admin, ignoring\n");        
+            }
+        }
+        else {
+            log2("Message is regular text...\n");
 			bool privMsg = msgtarget[0] != '#';
 			if (!privMsg) msg_time.push(seconds());
 			bool addressMsg = find_in_words(msg, mynick) || privMsg;
