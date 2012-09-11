@@ -20,8 +20,8 @@ You can join the project's IRC channel too: #triplie on irc.freenode.net
 
 Prerequisites
 
-sudo apt-get install libsqlite3-dev libboost-regex-dev
-apt-cyg install libsqlite3-devel libboost-devel
+	sudo apt-get install libsqlite3-dev libboost-regex-dev
+	apt-cyg install libsqlite3-devel libboost-devel
 
 To compile, unpack and type
 
@@ -144,7 +144,7 @@ For plain text files you can use
 
 prerequisites
 
-if [ $(uname -o) == 'Cygwin' ]; then s=; else s=sudo; fi; f=stanford-parser-2012-07-09.tgz; $s mkdir -p /usr/local/lib/java; wget -N http://nlp.stanford.edu/software/$f; 7z e $f -so|$s 7z e -aoa -si -ttar -o/usr/local/lib/java */stanford-parser.jar; rm "$f"
+	if [ $(uname -o) == 'Cygwin' ]; then s=; else s=sudo; fi; f=stanford-parser-2012-07-09.tgz; $s mkdir -p /usr/local/lib/java; wget -N http://nlp.stanford.edu/software/$f; 7z e $f -so|$s 7z e -aoa -si -ttar -o/usr/local/lib/java */stanford-parser.jar; rm "$f"
 
     ./feed_text.sh path/to/textfile.txt [database.db]
 

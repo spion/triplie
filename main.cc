@@ -322,9 +322,9 @@ void proccmd(string& rawcmd, string msg, string msgtarget, string wheretosend) {
 	tokenize(msg, tokens, " ,:");
 	u32 x = tokens.size();
 	string dc = defchar;
-	bool change = false, reply_match = wildmatch.wildcardfit(string(dc + dc + "*").c_str(), tokens[0].c_str());
-	if (reply_match) tokens[0] = tokens[0].substr(1);
-	bool reply = wheretosend.empty() || reply_match;
+	bool change = false, suppress_reply = wildmatch.wildcardfit(string(dc + dc + "*").c_str(), tokens[0].c_str());
+	if (suppress_reply) tokens[0] = tokens[0].substr(1);
+	bool reply = wheretosend.empty() || !suppress_reply;
 	/* command to join/part channel */
 	if (tokens[0] == dc + "join") {
 		if (x >= 2) irc_conn->join(tokens[1].c_str());

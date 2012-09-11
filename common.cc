@@ -20,20 +20,14 @@
 u8 verb = 1;
 
 void log(const char* f, ...) {
-	const int len = 0xfff;
-	char buf[len];
 	va_list l;
 	va_start(l, f);
-	vsnprintf(buf, len, f, l);
+	vfprintf(stderr, f, l);
 	va_end(l);
-	fprintf(stderr, buf);
 }
 void log(const char *f, va_list &l_) {
 	va_list *l = &l_;
-	const int len = 0xff;
-	char buf[len];
-	vsnprintf(buf, len, f, *l);
-	fprintf(stderr, buf);
+	vfprintf(stderr, f, *l);
 }
 void log1(const char* f, ...) {
 	if (verb < 1) return;
