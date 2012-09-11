@@ -58,9 +58,11 @@ unsigned int aipermute;
 double last_reply = 0;
 queue<double> msg_time;
 vector<string> defchans;
-string confFile = "triplie.conf", db = "botdata/triplie.db", server, serverpass = "", defnick, defuser, defname, defchar = "!";
+string confFile = "triplie.conf", db = "botdata/triplie.db", server, 
+       serverpass = "", defnick, defuser, defname, defchar = "!";
 u32 defport = 6667, sleepmin = 0, sleepmax = 0, partake_rate = 0, partake_lim = 5, speak_min = 0, speak_max = 0;
-bool shouldreconnect, ai = true, job = false, ramdb = false, mute = false, running = true, message = false;
+bool shouldreconnect, ai = true, job = false, ramdb = false, mute = false, 
+     running = true, message = false, use_default_response = true;
 
 void forktobg(string);
 void readadmins();
@@ -110,7 +112,8 @@ void usage() {
 		"\t\033[1m-%c, --%s\033[0m\tunsolicited reply percentage and limit. \033[1;30mlimit is the total channel message count during the past minute. ex: '%u %u' (default).\033[0m\n"
 		"\t\033[1m-%c, --%s\033[0m\tunsolicited speak limit range. \033[1;30mlimit is the total channel message count during the past minute. selected randomly from within range. ex: '%u %u' (default).\033[0m\n"
 		"\t\033[1m-%c, --%s\033[0m\tmessage on join, part, quit.\n",		
-		opt[0], optl[0].c_str(),
+		
+        opt[0], optl[0].c_str(),
 		opt[1], optl[1].c_str(),
 		opt[2], optl[2].c_str(),
 		opt[3], optl[3].c_str(), verb,
@@ -239,7 +242,7 @@ bool get_arg(int argc, char** argv) {
 		case 'm':
 			message = true;
 			break;
-		default:
+        default:
 			fprintf(stderr, "unknown option: %c\n", c);
 			break;
 		}
@@ -640,7 +643,7 @@ int procprivm(char* params, irc_reply_data* hostd, void* conn) {
 					log_speak("%s: <%s> %s <%s> %s\n", msgtarget.c_str(), rnick.c_str(), msg.substr(1).c_str(), mynick.c_str(), rawcmd.c_str());
                     if (sleepmax)
                         sleep(sleepmin + rand() % (abs(sleepmax - sleepmin) + 1));
-					if (rawcmd.empty() && addressMsg)
+					if (rawcmd.empty() && addressMsg && use_default_response)
 						rawcmd = " I'm unable to find a response to that.";
                     if (rawcmd != "") {
                         vector<string> repTokens;
@@ -877,6 +880,8 @@ int readsettings(string confFile) {
 			setts >> partake_rate >> partake_lim;
         } else if (strsetting == "speak") {
 			setts >> speak_min >> speak_max;
+        } else if (strsetting == "use_default_response") {
+            setts >> use_default_response;
         }
     }
     return 1;
