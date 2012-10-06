@@ -306,6 +306,9 @@ u32 msg_count(queue<double>& q, double t) {
 bool reply_time() {
 	return last_reply < seconds()-10*1000;
 }
+string db_stat(u32 word_o = 0) {
+	return format("%'u words, %'u relations, %'u associations, %s in database\n", tai->countwords()+word_o, tai->countrels(), tai->countvrels(), format_bytes(fsize(db)).c_str());
+}
 
 void close() {
 	if (!running) return;
@@ -409,7 +412,7 @@ void proccmd(string& rawcmd, string msg, string msgtarget, string wheretosend) {
 			message = atoi(tokens[1].c_str()) > 0;
 		if (reply) cmdreply(wheretosend, "message %d", message);
 	} else if (tai && msg == dc + "db stats") {
-			cmdreply(wheretosend, "%'u words, %'u relations, %'u associations in database", tai->countwords()+1, tai->countrels(), tai->countvrels());
+			cmdreply(wheretosend, "%s", db_stat(1).c_str());
 	} else if (tai && tokens[0] == dc + "ai") {
 		change = x >= 3;
 		if (tokens[1] == "order") {
@@ -710,7 +713,7 @@ int main(int argc, char** argv) {
 
     if (tai) {
 		tai->readalldata();
-		log("%'u words, %'u relations, %'u associations in ai database\n", tai->countwords(), tai->countrels(), tai->countvrels());
+		log("%s\n", db_stat().c_str());
 	}
 	log("%d admins, %d ignores\n", admins.userhosts.size(), ignores.userhosts.size());
 

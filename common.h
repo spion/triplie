@@ -21,6 +21,7 @@
 #include <iostream>
 #include <limits>
 #include <stdint.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
@@ -52,4 +53,5 @@ void log1(const char* f, ...);
 void log2(const char* f, ...);
 string format(const char* f, ...);
 double seconds();
-string time_hm();
+string time_hm();string format_bytes(s64 bytes);
+off_t fsize(string f);

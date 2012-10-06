@@ -71,3 +71,15 @@ string time_hm() {
 	strftime(buf, len, "%H:%M", localtime(&t));
 	return string(buf);
 }
+
+string format_bytes(s64 bytes) {
+	string sfx[] = {"B","kiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"};
+	u32 i;
+	for (i = 0; bytes / 1024 > 0 && i < 8; i++, bytes /= 1024) {}
+	return format("%lld %s", bytes, sfx[i].c_str());
+}
+off_t fsize(string f) {
+	struct stat filestatus;
+	stat(f.c_str(), &filestatus);
+	return filestatus.st_size;
+}
