@@ -264,6 +264,7 @@ void signal_handler(int sig, siginfo_t *info, void *ptr) {
 		case SIGTSTP: /* ignore tty signals */
 		case SIGTTIN:
 		case SIGTTOU:
+        case SIGWINCH:
             signal(sig, SIG_IGN);
             return;
     }
