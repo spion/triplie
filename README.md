@@ -27,10 +27,16 @@ To compile, unpack and type
 
     make
 
-The generated binaries will be called "triplie" and "cmdtriplie"
-triplie is the IRC version and cmdtriplie is the command line version.
-Additional binaries feedtriplie and worktriplie are also generated.
-You don't need to use these.
+The generated binaries will be called `triplie` and `cmdtriplie`
+`triplie` is the IRC version and `cmdtriplie` is the command line version.
+An additional binary `worktriplie` is also generated, which can be used
+for distributed processing (presently undocumented and unsupported)
+
+If you want to feed the bot with existing text data, you're also going to 
+need feedtriplie. To build it, type.
+
+    make feedtriplie
+
 Configure the bot as explained below before running!
 
 
