@@ -1,3 +1,9 @@
+# OLD VERSION
+
+### This version is no longer maintained.
+### See [triplie-ng](http://github.com/spion/triplie-ng) instead for a more recent version.
+
+
 # INTRODUCTION
 
 
